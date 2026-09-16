@@ -1,0 +1,219 @@
+import { useState } from 'react'
+import { Sparkles, Trash2, Check, X } from 'lucide-react'
+import { api } from '@/lib/api'
+import { usePaginatedList } from '@/lib/usePaginatedList'
+import { useOS } from '@/lib/osContext'
+import { formatDateTime } from '@/lib/format'
+import type { Memory as MemoryRow } from '@/lib/types'
+import { PageHeader, DataTable, Pager, Drawer, PrimitiveTag } from '@/components/data'
+
+function DeleteCell({ id, onDone }: { id?: string; onDone: () => void }) {
+  const [confirm, setConfirm] = useState(false)
+  const [busy, setBusy] = useState(false)
+  if (!id) return null
+  if (confirm) {
+    return (
+      <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+        <span className="text-[11px] text-red-300">Delete?</span>
+        <button
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true)
+            try {
+              await api.deleteMemory(id)
+              onDone()
+            } finally {
+              setBusy(false)
+            }
+          }}
+          className="text-red-400 hover:text-red-300"
+        >
+          <Check className="h-3.5 w-3.5" />
+        </button>
+        <button onClick={() => setConfirm(false)} className="text-faint hover:text-white">
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    )
+  }
+  return (
+    <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => setConfirm(true)}
+        className="text-faint hover:text-red-300"
+        title="Delete memory"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  )
+}
+
+function Topics({ topics }: { topics?: string[] }) {
+  if (!topics?.length) return <span className="text-faint">—</span>
+  return (
+    <div className="flex flex-wrap gap-1">
+      {topics.map((t) => (
+        <span
+          key={t}
+          className="rounded border border-border bg-black/30 px-1.5 py-0.5 font-mono text-[10px] text-muted"
+        >
+          {t}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+export function Memory() {
+  const { config } = useOS()
+  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState<MemoryRow | null>(null)
+  const [optimizing, setOptimizing] = useState(false)
+  const { rows, meta, loading, error, page, setPage, reload } = usePaginatedList<MemoryRow>(
+    (params, s) => api.memories(params, s),
+    { limit: 25, params: { search_content: search } }
+  )
+
+  const optimize = async () => {
+    setOptimizing(true)
+    try {
+      await api.optimizeMemories()
+      reload()
+    } finally {
+      setOptimizing(false)
+    }
+  }
+
+  return (
+    <div>
+      <PageHeader
+        title="Memory"
+        actions={
+          <div className="flex items-center gap-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search memories…"
+              className="w-56 rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-white outline-none focus:border-accent"
+            />
+            <button
+              onClick={optimize}
+              disabled={optimizing}
+              className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-white/5 hover:text-white disabled:opacity-40"
+            >
+              <Sparkles className={optimizing ? 'h-3.5 w-3.5 animate-pulse' : 'h-3.5 w-3.5'} />
+              Optimize
+            </button>
+          </div>
+        }
+      >
+        <div className="flex items-center gap-8 text-[12px]">
+          <div>
+            <div className="label">Database</div>
+            <div className="font-mono text-muted">{config?.os_database ?? '—'}</div>
+          </div>
+          <div>
+            <div className="label">Table</div>
+            <div className="font-mono text-muted">agno_memories</div>
+          </div>
+          <div>
+            <div className="label">Total</div>
+            <div className="font-mono text-muted">{meta?.total_count ?? '—'}</div>
+          </div>
+        </div>
+      </PageHeader>
+
+      <div className="px-8 py-2">
+        <DataTable<MemoryRow>
+          columns={[
+            {
+              key: 'memory',
+              header: 'Memory',
+              render: (r) => (
+                <span className="text-white">{r.memory || '—'}</span>
+              )
+            },
+            {
+              key: 'topics',
+              header: 'Topics',
+              render: (r) => <Topics topics={r.topics} />
+            },
+            {
+              key: 'component',
+              header: 'Added by',
+              render: (r) => <PrimitiveTag agentId={r.agent_id} teamId={r.team_id} />
+            },
+            { key: 'user_id', header: 'User', render: (r) => r.user_id || '—' },
+            {
+              key: 'updated_at',
+              header: 'Updated',
+              align: 'right',
+              render: (r) => (
+                <span className="font-mono text-[12px] text-faint">
+                  {formatDateTime(r.updated_at)}
+                </span>
+              )
+            },
+            {
+              key: 'actions',
+              header: '',
+              align: 'right',
+              render: (r) => <DeleteCell id={r.memory_id} onDone={reload} />
+            }
+          ]}
+          rows={rows}
+          loading={loading}
+          error={error}
+          empty="No memories stored yet."
+          getKey={(r) => r.memory_id ?? JSON.stringify(r)}
+          onRowClick={setSelected}
+        />
+        <Pager page={page} totalPages={meta?.total_pages ?? 1} onPage={setPage} />
+      </div>
+
+      <Drawer open={!!selected} title="Memory" onClose={() => setSelected(null)}>
+        {selected && (
+          <div className="space-y-5">
+            <div>
+              <div className="label mb-1.5">Memory</div>
+              <div className="rounded-lg border border-border bg-black/30 px-3 py-2.5 text-[14px] text-white">
+                {selected.memory || '—'}
+              </div>
+            </div>
+            <div>
+              <div className="label mb-1.5">Topics</div>
+              <Topics topics={selected.topics} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="label mb-1.5">Added by</div>
+                <PrimitiveTag agentId={selected.agent_id} teamId={selected.team_id} />
+              </div>
+              <div>
+                <div className="label mb-1.5">User</div>
+                <div className="font-mono text-[12px] text-muted">
+                  {selected.user_id || '—'}
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="label mb-1.5">Created</div>
+                <div className="font-mono text-[12px] text-muted">
+                  {formatDateTime(selected.created_at)}
+                </div>
+              </div>
+              <div>
+                <div className="label mb-1.5">Updated</div>
+                <div className="font-mono text-[12px] text-muted">
+                  {formatDateTime(selected.updated_at)}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </Drawer>
+    </div>
+  )
+}

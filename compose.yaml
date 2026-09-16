@@ -1,0 +1,23 @@
+services:
+  control-plane:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agno-control-plane
+    image: agno-control-plane:latest
+    restart: unless-stopped
+    ports:
+      - "8810:80"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Where the AgentOS runtime lives, seen from inside the container.
+      AGENTOS_UPSTREAM: "${AGENTOS_UPSTREAM:-http://host.docker.internal:8000}"
+      # Shared bearer for the AgentOS REST API (security_key auth). Set it in .env.
+      OS_SECURITY_KEY: "${OS_SECURITY_KEY:-}"
+      # Control-plane login password. The browser must send it (after login) as
+      # X-CP-Auth or /api returns 401. Empty disables the gate. Set it in .env.
+      CP_AUTH_TOKEN: "${CP_AUTH_TOKEN:-}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -1,0 +1,40 @@
+# When CP_AUTH_TOKEN is set, /api requires a matching X-CP-Auth header (the app
+# sends it after login). Empty token -> the empty-string key matches requests
+# with no header, so auth is disabled.
+map $http_x_cp_auth $cp_auth_ok {
+    default 0;
+    "${CP_AUTH_TOKEN}" 1;
+}
+
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+    gzip_min_length 1024;
+
+    # SPA routes fall back to index.html.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Reverse-proxy the AgentOS REST API. The shared bearer key is injected here
+    # so it never reaches the browser. security_key auth mode, hardcoded for now.
+    location /api/ {
+        if ($cp_auth_ok = 0) {
+            return 401;
+        }
+        proxy_pass ${AGENTOS_UPSTREAM}/;
+        proxy_set_header Authorization "Bearer ${OS_SECURITY_KEY}";
+        proxy_set_header Host $host;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        # Keep responses unbuffered for future SSE (agent/team run streaming).
+        proxy_buffering off;
+        proxy_read_timeout 300s;
+    }
+}
