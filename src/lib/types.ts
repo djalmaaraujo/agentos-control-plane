@@ -256,6 +256,29 @@ export interface ComponentDetail {
   [k: string]: unknown
 }
 
+export type ComponentType = 'agent' | 'team' | 'workflow'
+
+export interface Component {
+  component_id: string
+  component_type: ComponentType
+  name?: string
+  description?: string
+  current_version?: number
+  metadata?: Record<string, unknown>
+  created_at?: number
+  updated_at?: number
+}
+
+export interface ComponentConfig {
+  component_id: string
+  version: number
+  label?: string
+  stage?: string
+  config: Record<string, unknown>
+  notes?: string
+  created_at?: number
+}
+
 export interface RegistryItem {
   id: string
   name: string

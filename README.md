@@ -18,6 +18,8 @@ proxy serves the app and forwards `/api` to your AgentOS runtime.
   metadata).
 - **Traces** — a span waterfall (agent / team / model / tool) with per-span
   input, output and metadata.
+- **Studio** — build and version agents, teams and workflows at runtime: create a
+  component, edit its config, manage config versions and set the current one.
 - **Learning** — user memories, profiles, entity memories, session context and
   decision logs.
 - **Memory** — stored memories with search, delete and optimize.

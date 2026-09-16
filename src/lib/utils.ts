@@ -5,6 +5,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function isValidJson(v: string): boolean {
+  if (!v.trim()) return false
+  try {
+    JSON.parse(v)
+    return true
+  } catch {
+    return false
+  }
+}
+
 // Streamed run content events. Agents emit "RunContent"; teams emit
 // "TeamRunContent". Both carry the text delta in `content`.
 export function isContentEvent(event?: unknown): boolean {

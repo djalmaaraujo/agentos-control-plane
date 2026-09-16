@@ -7,6 +7,7 @@ import {
   Brain,
   BookOpen,
   BarChart3,
+  Blocks,
   ClipboardCheck,
   CalendarClock,
   GraduationCap,
@@ -27,6 +28,7 @@ export const NAV: NavItem[] = [
   { label: 'Chat', to: '/chat', icon: MessageSquare },
   { label: 'Sessions', to: '/sessions', icon: Play },
   { label: 'Traces', to: '/traces', icon: ListTree },
+  { label: 'Studio', to: '/studio', icon: Blocks },
   {
     label: 'Learning',
     to: '/learning/user-memories',

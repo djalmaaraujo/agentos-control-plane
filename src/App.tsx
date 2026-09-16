@@ -5,6 +5,7 @@ import { Home } from '@/pages/Home'
 import { Chat } from '@/pages/Chat'
 import { Sessions } from '@/pages/Sessions'
 import { Traces } from '@/pages/Traces'
+import { Studio } from '@/pages/Studio'
 import { Learning } from '@/pages/Learning'
 import { Memory } from '@/pages/Memory'
 import { Knowledge } from '@/pages/Knowledge'
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="chat" element={<Chat />} />
         <Route path="sessions" element={<Sessions />} />
         <Route path="traces" element={<Traces />} />
+        <Route path="studio" element={<Studio />} />
         <Route path="learning/:module" element={<Learning />} />
         <Route path="memory" element={<Memory />} />
         <Route path="knowledge" element={<Knowledge />} />

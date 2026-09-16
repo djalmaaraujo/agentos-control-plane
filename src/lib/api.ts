@@ -1,7 +1,10 @@
 import { apiGet, apiJson } from './client'
 import type {
   Approval,
+  Component,
+  ComponentConfig,
   ComponentDetail,
+  ComponentType,
   DailyMetric,
   EvalRun,
   KnowledgeContent,
@@ -90,6 +93,25 @@ export const api = {
 
   registry: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<RegistryItem>>('/registry', q, s),
+
+  components: (q: Q, s?: AbortSignal) =>
+    apiGet<Paginated<Component>>('/components', q, s),
+  createComponent: (body: {
+    name: string
+    component_type: ComponentType
+    description?: string
+    config?: Record<string, unknown>
+    set_current?: boolean
+  }) => apiJson<Component>('/components', 'POST', body),
+  deleteComponent: (id: string) => apiJson(`/components/${id}`, 'DELETE'),
+  componentConfigs: (id: string, s?: AbortSignal) =>
+    apiGet<ComponentConfig[]>(`/components/${id}/configs`, undefined, s),
+  componentCurrentConfig: (id: string, s?: AbortSignal) =>
+    apiGet<ComponentConfig>(`/components/${id}/configs/current`, undefined, s),
+  saveComponentConfig: (id: string, config: Record<string, unknown>) =>
+    apiJson(`/components/${id}/configs`, 'POST', { config, set_current: true }),
+  setCurrentConfig: (id: string, version: number) =>
+    apiJson(`/components/${id}/configs/${version}/set-current`, 'POST'),
 
   migrateDatabase: (dbId: string) => apiJson(`/databases/${dbId}/migrate`, 'POST'),
   migrateAll: () => apiJson('/databases/all/migrate', 'POST'),
