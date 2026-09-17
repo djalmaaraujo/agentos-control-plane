@@ -22,7 +22,7 @@ import { streamRun } from '@/lib/client'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
 import { runsToMessages } from '@/lib/runs'
-import type { ComponentRef, Session } from '@/lib/types'
+import type { Component, ComponentRef, Session } from '@/lib/types'
 import { cn, isContentEvent } from '@/lib/utils'
 import { Markdown } from '@/components/Markdown'
 import { ToolCallView, type ChatToolCall } from '@/components/ToolCall'
@@ -274,7 +274,20 @@ export function Chat() {
       : type === 'workflow'
         ? config?.workflows
         : config?.agents) ?? []
-  const list: ComponentRef[] = runtime.data ?? configList
+  // The runtime /agents endpoint returns no display name for Studio-authored
+  // components, so fill it from the components catalog, keyed by id.
+  const comps = useApi<{ data: Component[] }>(
+    (s) => api.components({ component_type: type, limit: 100 }, s),
+    [type]
+  )
+  const list: ComponentRef[] = (runtime.data ?? configList).map((c) =>
+    c.name
+      ? c
+      : {
+          ...c,
+          name: comps.data?.data.find((k) => k.component_id === c.id)?.name ?? c.id
+        }
+  )
   const current = list.find((c) => c.id === id) ?? list[0]
   const manifest = current ? config?.manifest?.[current.id] : undefined
 
