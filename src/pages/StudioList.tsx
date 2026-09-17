@@ -4,14 +4,15 @@ import { Bot, Loader2, MoreVertical, Plus, Trash2, Users, Workflow } from 'lucid
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
 import { useFormOptions } from '@/lib/useFormOptions'
-import type { Component, ComponentType } from '@/lib/types'
+import { useOS } from '@/lib/osContext'
+import type { Component, ComponentRef, ComponentType } from '@/lib/types'
 import { PageHeader } from '@/components/data'
 import { PageEmpty, CardGrid } from '@/components/shared'
 import { Card, PillButton, Spinner } from '@/components/ui'
 import { ComponentForm, type FormOptions } from '@/components/ComponentForm'
 import { Drawer } from '@/components/data'
 import { StudioEditor } from './StudioEditor'
-import { cn } from '@/lib/utils'
+import { cn, modelLabel } from '@/lib/utils'
 
 const SLUG: Record<string, { type: ComponentType; label: string }> = {
   agents: { type: 'agent', label: 'Agent' },
@@ -167,11 +168,53 @@ function StudioCard({
   )
 }
 
+function CodeCard({
+  item,
+  type,
+  onChat
+}: {
+  item: ComponentRef
+  type: ComponentType
+  onChat: () => void
+}) {
+  const Icon = ICON[type]
+  return (
+    <Card className="flex min-h-[150px] flex-col p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-black">
+            <Icon className="h-4 w-4" strokeWidth={2} />
+          </span>
+          <span className="font-medium text-fg">{item.name || item.id}</span>
+        </div>
+        <span className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-faint">
+          code
+        </span>
+      </div>
+
+      <div className="mt-3 space-y-1 font-mono text-[11px] text-faint">
+        {item.model && <div>{modelLabel(item.model)}</div>}
+        {item.mode && <div>mode · {item.mode}</div>}
+      </div>
+
+      <div className="mt-auto pt-3">
+        <div className="mb-3 font-mono text-[11px] text-faint">
+          Defined in code — edit in your Python source
+        </div>
+        <div className="flex gap-2">
+          <PillButton onClick={onChat}>Chat</PillButton>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 export function StudioList() {
   const { type: slug = 'agents' } = useParams()
   const meta = SLUG[slug] ?? SLUG.agents
   const navigate = useNavigate()
   const options = useFormOptions()
+  const { config } = useOS()
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<Component | null>(null)
 
@@ -180,6 +223,12 @@ export function StudioList() {
     { limit: 100 }
   )
   const items = rows.filter((r) => r.component_type === meta.type)
+  const codeItems =
+    (meta.type === 'agent'
+      ? config?.agents
+      : meta.type === 'team'
+        ? config?.teams
+        : config?.workflows) ?? []
 
   if (editing) {
     return (
@@ -209,14 +258,14 @@ export function StudioList() {
         }
       />
 
-      <div className="px-8 py-6">
-        {loading && items.length === 0 ? (
+      <div className="space-y-8 px-8 py-6">
+        {loading && items.length === 0 && codeItems.length === 0 ? (
           <div className="flex justify-center py-16">
             <Spinner className="h-5 w-5 text-faint" />
           </div>
         ) : error ? (
           <p className="text-sm text-red-300">{error}</p>
-        ) : items.length === 0 ? (
+        ) : items.length === 0 && codeItems.length === 0 ? (
           <PageEmpty
             icon={
               <span className={cn('flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-black')}>
@@ -236,17 +285,52 @@ export function StudioList() {
             }
           />
         ) : (
-          <CardGrid>
-            {items.map((c) => (
-              <StudioCard
-                key={c.component_id}
-                component={c}
-                onChat={() => navigate(`/chat?type=${c.component_type}&id=${c.component_id}`)}
-                onEdit={() => setEditing(c)}
-                onDeleted={reload}
-              />
-            ))}
-          </CardGrid>
+          <>
+            {codeItems.length > 0 && (
+              <section>
+                <div className="mb-3">
+                  <div className="label">From code · read-only</div>
+                  <p className="mt-1 text-[12px] text-faint">
+                    Defined in your AgentOS Python source. Chat with them here;
+                    edit them in code. Studio-authored {meta.label.toLowerCase()}s
+                    below are stored in the database and can be versioned and published.
+                  </p>
+                </div>
+                <CardGrid>
+                  {codeItems.map((c) => (
+                    <CodeCard
+                      key={c.id}
+                      item={c}
+                      type={meta.type}
+                      onChat={() => navigate(`/chat?type=${meta.type}&id=${c.id}`)}
+                    />
+                  ))}
+                </CardGrid>
+              </section>
+            )}
+
+            <section>
+              <div className="label mb-3">Studio components</div>
+              {items.length === 0 ? (
+                <p className="text-[13px] text-faint">
+                  No Studio-authored {meta.label.toLowerCase()}s yet. Create one to
+                  version and publish it.
+                </p>
+              ) : (
+                <CardGrid>
+                  {items.map((c) => (
+                    <StudioCard
+                      key={c.component_id}
+                      component={c}
+                      onChat={() => navigate(`/chat?type=${c.component_type}&id=${c.component_id}`)}
+                      onEdit={() => setEditing(c)}
+                      onDeleted={reload}
+                    />
+                  ))}
+                </CardGrid>
+              )}
+            </section>
+          </>
         )}
       </div>
 
