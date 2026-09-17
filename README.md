@@ -9,6 +9,8 @@ browser — a lightweight, open alternative to the hosted dashboard.
 Built with Vite + React + TypeScript + Tailwind. No backend of its own: a thin
 proxy serves the app and forwards `/api` to your AgentOS runtime.
 
+![Studio — visual canvas for teams and workflows](docs/studio.png)
+
 ## Features
 
 - **Home** — agents, teams, workflows and interfaces as cards; open a chat or a
