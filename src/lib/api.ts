@@ -4,6 +4,7 @@ import type {
   Component,
   ComponentConfig,
   ComponentDetail,
+  ComponentRef,
   ComponentType,
   DailyMetric,
   EvalRun,
@@ -126,6 +127,10 @@ export const api = {
     apiGet<ComponentDetail>(`/agents/${id}`, undefined, s),
   team: (id: string, s?: AbortSignal) =>
     apiGet<ComponentDetail>(`/teams/${id}`, undefined, s),
+
+  agents: (s?: AbortSignal) => apiGet<ComponentRef[]>('/agents', undefined, s),
+  teams: (s?: AbortSignal) => apiGet<ComponentRef[]>('/teams', undefined, s),
+  workflows: (s?: AbortSignal) => apiGet<ComponentRef[]>('/workflows', undefined, s),
 
   registry: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<RegistryItem>>('/registry', q, s),

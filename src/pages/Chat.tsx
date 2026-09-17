@@ -259,12 +259,22 @@ export function Chat() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
-  const list: ComponentRef[] =
+  const runtime = useApi<ComponentRef[]>(
+    (s) =>
+      type === 'team'
+        ? api.teams(s)
+        : type === 'workflow'
+          ? api.workflows(s)
+          : api.agents(s),
+    [type]
+  )
+  const configList: ComponentRef[] =
     (type === 'team'
       ? config?.teams
       : type === 'workflow'
         ? config?.workflows
         : config?.agents) ?? []
+  const list: ComponentRef[] = runtime.data ?? configList
   const current = list.find((c) => c.id === id) ?? list[0]
   const manifest = current ? config?.manifest?.[current.id] : undefined
 
@@ -452,7 +462,7 @@ export function Chat() {
         >
           {list.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name}
+              {c.name || c.id}
             </option>
           ))}
         </select>
@@ -505,7 +515,7 @@ export function Chat() {
                 {type === 'team' ? <Users className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
               </div>
               <div className="mt-4 text-lg font-semibold text-fg">
-                {current?.name ?? 'Chat'}
+                {current?.name || current?.id || 'Chat'}
               </div>
               {manifest?.description && (
                 <p className="mt-1 max-w-md text-sm text-muted">{manifest.description}</p>
@@ -605,7 +615,7 @@ export function Chat() {
               }
             }}
             rows={1}
-            placeholder={`Message ${current?.name ?? '…'}`}
+            placeholder={`Message ${current?.name || current?.id || '…'}`}
             className="max-h-40 flex-1 resize-none bg-transparent py-1.5 text-[14px] text-fg outline-none placeholder:text-faint"
           />
           {streaming ? (
@@ -630,7 +640,7 @@ export function Chat() {
           )}
         </div>
         <div className="mx-auto mt-2 max-w-3xl text-center font-mono text-[10px] uppercase tracking-wider text-faint">
-          {current ? `${type} · ${current.name}` : 'no component'}
+          {current ? `${type} · ${current.name || current.id}` : 'no component'}
         </div>
       </div>
 
@@ -640,7 +650,7 @@ export function Chat() {
           onClose={() => setShowSessions(false)}
           type={type}
           componentId={current.id}
-          componentName={current.name}
+          componentName={current.name || current.id}
           onPick={loadSession}
         />
       )}
