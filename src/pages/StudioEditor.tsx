@@ -3,14 +3,46 @@ import { ChevronLeft, Loader2, Check } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
 import { formatDateTime } from '@/lib/format'
-import type { Component, ComponentConfig } from '@/lib/types'
+import type { Component, ComponentConfig, ComponentType } from '@/lib/types'
 import { ComponentForm, type FormOptions } from '@/components/ComponentForm'
+import { CopyBlock } from '@/components/shared'
 import { Spinner } from '@/components/ui'
 
 // React Flow is heavy and only needed here — load it as its own chunk on demand.
 const StudioCanvas = lazy(() =>
   import('@/components/StudioCanvas').then((m) => ({ default: m.StudioCanvas }))
 )
+
+const API_ROUTE: Record<ComponentType, { base: string; idParam: string; mcpTool: string }> = {
+  agent: { base: 'agents', idParam: 'agent_id', mcpTool: 'run_agent' },
+  team: { base: 'teams', idParam: 'team_id', mcpTool: 'run_team' },
+  workflow: { base: 'workflows', idParam: 'workflow_id', mcpTool: 'run_workflow' }
+}
+
+function ApiAccessPanel({ type, id }: { type: ComponentType; id: string }) {
+  const r = API_ROUTE[type]
+  const curl = `curl -X POST "$AGENTOS_URL/${r.base}/${id}/runs" \\
+  -H "Authorization: Bearer $OS_SECURITY_KEY" \\
+  -F "message=Hello" \\
+  -F "stream=false"`
+  const mcp = `# MCP server: $AGENTOS_URL/mcp
+# Call the built-in tool:
+${r.mcpTool}(${r.idParam}="${id}", message="Hello")`
+  return (
+    <div className="mt-6">
+      <div className="label mb-2">API access</div>
+      <p className="mb-3 text-[12px] leading-relaxed text-faint">
+        Published — reachable over REST and the OS MCP server. Set{' '}
+        <span className="font-mono">$AGENTOS_URL</span> and{' '}
+        <span className="font-mono">$OS_SECURITY_KEY</span> to your values.
+      </p>
+      <div className="space-y-3">
+        <CopyBlock label="REST · run" value={curl} />
+        <CopyBlock label={`MCP · ${r.mcpTool}`} value={mcp} />
+      </div>
+    </div>
+  )
+}
 
 export function StudioEditor({
   component,
@@ -157,6 +189,9 @@ export function StudioEditor({
               onChange={setDraft}
               options={options}
             />
+            {data?.stage === 'published' && (
+              <ApiAccessPanel type={component.component_type} id={component.component_id} />
+            )}
             <div className="mt-6">
               <div className="label mb-2">Versions</div>
               {versions.loading && <Spinner className="h-4 w-4 text-faint" />}

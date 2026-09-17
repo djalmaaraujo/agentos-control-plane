@@ -1,7 +1,33 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Download } from 'lucide-react'
+import { Check, Copy, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { TIME_RANGES, type TimeRangeKey } from '@/lib/timeRange'
+
+// A labelled code block with a copy-to-clipboard button.
+export function CopyBlock({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between">
+        <span className="label">{label}</span>
+        <button
+          onClick={() => {
+            navigator.clipboard?.writeText(value)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1200)
+          }}
+          className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
+        >
+          {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+          copy
+        </button>
+      </div>
+      <pre className="max-h-56 overflow-auto rounded-lg border border-border bg-inset p-3 font-mono text-[11px] leading-relaxed text-muted">
+        {value}
+      </pre>
+    </div>
+  )
+}
 
 // A compact Database / Table / … metadata strip used under page headers.
 export function DbTableHeader({

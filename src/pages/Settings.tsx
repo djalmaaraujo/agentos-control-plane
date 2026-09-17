@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Copy, KeyRound, Loader2, LogOut, Plus, Trash2 } from 'lucide-react'
+import { KeyRound, Loader2, LogOut, Plus, Trash2 } from 'lucide-react'
 import { useOS } from '@/lib/osContext'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
@@ -7,32 +7,8 @@ import { getAuthToken, setAuthToken } from '@/lib/client'
 import { generateRsaKeypair } from '@/lib/keys'
 import { getTheme, setTheme, type Theme } from '@/lib/theme'
 import { PageHeader } from '@/components/data'
+import { CopyBlock } from '@/components/shared'
 import { cn } from '@/lib/utils'
-
-function CopyBlock({ label, value }: { label: string; value: string }) {
-  const [copied, setCopied] = useState(false)
-  return (
-    <div>
-      <div className="mb-1 flex items-center justify-between">
-        <span className="label">{label}</span>
-        <button
-          onClick={() => {
-            navigator.clipboard?.writeText(value)
-            setCopied(true)
-            setTimeout(() => setCopied(false), 1200)
-          }}
-          className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
-        >
-          {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-          copy
-        </button>
-      </div>
-      <pre className="max-h-40 overflow-auto rounded-lg border border-border bg-inset p-3 font-mono text-[11px] leading-relaxed text-muted">
-        {value}
-      </pre>
-    </div>
-  )
-}
 
 function AuthPanel() {
   const [keys, setKeys] = useState<{ publicKeyPem: string; privateKeyPem: string } | null>(null)
