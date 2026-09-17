@@ -20,7 +20,8 @@ import type {
   ServiceAccount,
   Session,
   Trace,
-  TraceDetail
+  TraceDetail,
+  TraceSessionStat
 } from './types'
 
 export { ApiError } from './client'
@@ -48,6 +49,8 @@ export const api = {
   traces: (q: Q, s?: AbortSignal) => apiGet<Paginated<Trace>>('/traces', q, s),
   trace: (id: string, s?: AbortSignal) =>
     apiGet<TraceDetail>(`/traces/${id}`, undefined, s),
+  traceSessionStats: (q: Q, s?: AbortSignal) =>
+    apiGet<Paginated<TraceSessionStat>>('/trace_session_stats', q, s),
 
   memories: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<Memory>>('/memories', q, s),
@@ -86,6 +89,13 @@ export const api = {
 
   serviceAccounts: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<ServiceAccount>>('/service-accounts', q, s),
+  createServiceAccount: (body: {
+    name: string
+    never_expires?: boolean
+    expires_in_days?: number
+  }) => apiJson<ServiceAccount>('/service-accounts', 'POST', body),
+  deleteServiceAccount: (id: string) =>
+    apiJson(`/service-accounts/${id}`, 'DELETE'),
 
   knowledgeContent: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<KnowledgeContent>>('/knowledge/content', q, s),

@@ -28,7 +28,17 @@ export const NAV: NavItem[] = [
   { label: 'Chat', to: '/chat', icon: MessageSquare },
   { label: 'Sessions', to: '/sessions', icon: Play },
   { label: 'Traces', to: '/traces', icon: ListTree },
-  { label: 'Studio', to: '/studio', icon: Blocks },
+  {
+    label: 'Studio',
+    to: '/studio/agents',
+    icon: Blocks,
+    children: [
+      { label: 'Agents', to: '/studio/agents' },
+      { label: 'Teams', to: '/studio/teams' },
+      { label: 'Workflows', to: '/studio/workflows' },
+      { label: 'Registry', to: '/studio/registry' }
+    ]
+  },
   {
     label: 'Learning',
     to: '/learning/user-memories',
@@ -53,7 +63,6 @@ export const NAV: NavItem[] = [
     icon: Server,
     children: [
       { label: 'Service Accounts', to: '/manage/service-accounts' },
-      { label: 'Registry', to: '/manage/registry' },
       { label: 'Databases', to: '/manage/databases' }
     ]
   },

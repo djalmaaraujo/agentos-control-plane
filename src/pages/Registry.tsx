@@ -1,74 +1,133 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { api } from '@/lib/api'
-import { usePaginatedList } from '@/lib/usePaginatedList'
+import { useApi } from '@/lib/useApi'
 import type { RegistryItem } from '@/lib/types'
-import { PageHeader, DataTable, Pager } from '@/components/data'
+import { PageHeader, Drawer, JsonBlock } from '@/components/data'
+import { Card, Spinner, ErrorState, SectionHeader } from '@/components/ui'
+
+const GROUP_ORDER = [
+  'model',
+  'tool',
+  'function',
+  'db',
+  'knowledge',
+  'learning',
+  'agent',
+  'team',
+  'workflow'
+]
+const GROUP_LABEL: Record<string, string> = {
+  model: 'Models',
+  tool: 'Tools',
+  function: 'Functions',
+  db: 'Databases',
+  knowledge: 'Knowledge',
+  learning: 'Learning',
+  agent: 'Agents',
+  team: 'Teams',
+  workflow: 'Workflows'
+}
+
+function RegistryCard({
+  item,
+  onOpen
+}: {
+  item: RegistryItem
+  onOpen: () => void
+}) {
+  const fns = item.metadata?.functions ?? []
+  const shown = fns.slice(0, 6)
+  return (
+    <Card className="flex flex-col p-4">
+      <div className="font-medium text-white">{item.name}</div>
+      <div className="mt-1.5">
+        <span className="rounded border border-border bg-black/30 px-2 py-0.5 font-mono text-[10px] uppercase text-muted">
+          {item.metadata?.id || item.name}
+        </span>
+      </div>
+      {shown.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {shown.map((f) => (
+            <span
+              key={f.name}
+              className="rounded border border-border-soft bg-black/20 px-1.5 py-0.5 font-mono text-[10px] uppercase text-faint"
+            >
+              {f.name}
+            </span>
+          ))}
+          {fns.length > shown.length && (
+            <span className="font-mono text-[10px] text-faint">
+              +{fns.length - shown.length}
+            </span>
+          )}
+        </div>
+      )}
+      <button
+        onClick={onOpen}
+        className="mt-4 self-start font-mono text-[10px] uppercase tracking-wider text-faint hover:text-white"
+      >
+        See details ↗
+      </button>
+    </Card>
+  )
+}
 
 export function Registry() {
-  const [q, setQ] = useState('')
-  const { rows, meta, loading, error, page, setPage } =
-    usePaginatedList<RegistryItem>((params, s) => api.registry(params, s), {
-      limit: 50
-    })
+  const { data, loading, error, reload } = useApi(
+    (s) => api.registry({ limit: 100 }, s),
+    []
+  )
+  const [selected, setSelected] = useState<RegistryItem | null>(null)
 
-  const filtered = q
-    ? rows.filter((r) => (r.name + (r.type ?? '')).toLowerCase().includes(q.toLowerCase()))
-    : rows
+  const groups = useMemo(() => {
+    const by: Record<string, RegistryItem[]> = {}
+    for (const it of data?.data ?? []) {
+      const t = it.type || 'other'
+      ;(by[t] ??= []).push(it)
+    }
+    const keys = [
+      ...GROUP_ORDER.filter((k) => by[k]),
+      ...Object.keys(by).filter((k) => !GROUP_ORDER.includes(k))
+    ]
+    return keys.map((k) => ({ key: k, label: GROUP_LABEL[k] ?? k, items: by[k] }))
+  }, [data])
 
   return (
     <div>
-      <PageHeader
-        title="Registry"
-        actions={
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Filter…"
-            className="w-56 rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-white outline-none focus:border-accent"
-          />
-        }
-      >
+      <PageHeader title="Studio · Registry">
         <span className="text-[12px] text-faint">
-          Tools, toolkits and resources this OS can build with.{' '}
-          {meta?.total_count ?? 0} total.
+          Tools, models and resources this OS can build with.{' '}
+          {data?.meta?.total_count ?? 0} total.
         </span>
       </PageHeader>
 
-      <div className="px-8 py-2">
-        <DataTable<RegistryItem>
-          columns={[
-            {
-              key: 'name',
-              header: 'Name',
-              render: (r) => <span className="font-mono text-[13px] text-white">{r.name}</span>
-            },
-            {
-              key: 'type',
-              header: 'Type',
-              render: (r) => (
-                <span className="rounded border border-border bg-black/30 px-2 py-0.5 font-mono text-[10px] uppercase text-muted">
-                  {r.type || '—'}
-                </span>
-              )
-            },
-            {
-              key: 'class_path',
-              header: 'Class path',
-              render: (r) => (
-                <span className="font-mono text-[11px] text-faint">
-                  {r.metadata?.class_path || '—'}
-                </span>
-              )
-            }
-          ]}
-          rows={filtered}
-          loading={loading}
-          error={error}
-          empty="Registry is empty."
-          getKey={(r) => r.id}
-        />
-        <Pager page={page} totalPages={meta?.total_pages ?? 1} onPage={setPage} />
+      <div className="px-8 py-6">
+        {loading && !data && (
+          <div className="flex justify-center py-16">
+            <Spinner className="h-5 w-5 text-faint" />
+          </div>
+        )}
+        {error && <ErrorState message={error} onRetry={reload} />}
+        {data &&
+          groups.map((g) => (
+            <section key={g.key}>
+              <SectionHeader>{g.label}</SectionHeader>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {g.items.map((it) => (
+                  <RegistryCard key={it.id} item={it} onOpen={() => setSelected(it)} />
+                ))}
+              </div>
+            </section>
+          ))}
       </div>
+
+      <Drawer
+        open={!!selected}
+        title={<span className="font-mono text-[13px]">{selected?.name}</span>}
+        onClose={() => setSelected(null)}
+      >
+        {selected && <JsonBlock value={selected} />}
+      </Drawer>
     </div>
   )
 }

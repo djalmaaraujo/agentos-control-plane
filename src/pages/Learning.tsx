@@ -13,6 +13,7 @@ import {
   PrimitiveTag,
   ConfirmDelete
 } from '@/components/data'
+import { DbTableHeader } from '@/components/shared'
 
 const MODULES: Record<string, { title: string; type: string }> = {
   'user-memories': { title: 'User Memories', type: 'user_memory' },
@@ -68,20 +69,13 @@ export function Learning() {
   return (
     <div>
       <PageHeader title={mod.title}>
-        <div className="flex items-center gap-8 text-[12px]">
-          <div>
-            <div className="label">Database</div>
-            <div className="font-mono text-muted">{config?.os_database ?? '—'}</div>
-          </div>
-          <div>
-            <div className="label">Table</div>
-            <div className="font-mono text-muted">agno_learnings</div>
-          </div>
-          <div>
-            <div className="label">Total</div>
-            <div className="font-mono text-muted">{meta?.total_count ?? '—'}</div>
-          </div>
-        </div>
+        <DbTableHeader
+          items={[
+            { label: 'Database', value: config?.os_database },
+            { label: 'Table', value: 'agno_learnings' },
+            { label: 'Total', value: meta?.total_count ?? '—' }
+          ]}
+        />
       </PageHeader>
 
       <div className="px-8 py-2">

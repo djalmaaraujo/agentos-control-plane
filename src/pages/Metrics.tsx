@@ -7,6 +7,8 @@ import { formatCompact } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { DailyMetric, MetricsResponse } from '@/lib/types'
 import { PageHeader } from '@/components/data'
+import { DbTableHeader, ExportMenu } from '@/components/shared'
+import { exportCsv, exportJson } from '@/lib/export'
 import { Spinner, ErrorState } from '@/components/ui'
 import { BarChart, Donut, LineChart } from '@/components/charts'
 
@@ -112,6 +114,15 @@ export function Metrics() {
         title="Metrics"
         actions={
           <div className="flex items-center gap-2">
+            <ExportMenu
+              onCsv={() =>
+                exportCsv(
+                  `metrics-${MONTHS[month].toLowerCase()}-${year}`,
+                  metrics as unknown as Record<string, unknown>[]
+                )
+              }
+              onJson={() => exportJson(`metrics-${MONTHS[month].toLowerCase()}-${year}`, metrics)}
+            />
             <button
               onClick={recalculate}
               disabled={recalculating}
@@ -134,16 +145,12 @@ export function Metrics() {
           </div>
         }
       >
-        <div className="flex items-center gap-8 text-[12px]">
-          <div>
-            <div className="label">Database</div>
-            <div className="font-mono text-muted">{config?.os_database ?? '—'}</div>
-          </div>
-          <div>
-            <div className="label">Table</div>
-            <div className="font-mono text-muted">agno_metrics</div>
-          </div>
-        </div>
+        <DbTableHeader
+          items={[
+            { label: 'Database', value: config?.os_database },
+            { label: 'Table', value: 'agno_metrics' }
+          ]}
+        />
       </PageHeader>
 
       <div className="px-8 py-6">

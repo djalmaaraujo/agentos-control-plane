@@ -10,6 +10,8 @@ import { runsToMessages } from '@/lib/runs'
 import { modelLabel } from '@/lib/utils'
 import type { Session } from '@/lib/types'
 import { PageHeader, DataTable, Pager, Drawer, PrimitiveTag } from '@/components/data'
+import { DbTableHeader, ExportMenu } from '@/components/shared'
+import { exportCsv, exportJson } from '@/lib/export'
 import { Markdown } from '@/components/Markdown'
 import { cn } from '@/lib/utils'
 import { Spinner } from '@/components/ui'
@@ -213,32 +215,43 @@ export function Sessions() {
       <PageHeader
         title="Sessions"
         actions={
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-white/5"
-          >
-            <option value="">All</option>
-            <option value="agent">Agents</option>
-            <option value="team">Teams</option>
-            <option value="workflow">Workflows</option>
-          </select>
+          <div className="flex items-center gap-2">
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-white/5"
+            >
+              <option value="">All</option>
+              <option value="agent">Agents</option>
+              <option value="team">Teams</option>
+              <option value="workflow">Workflows</option>
+            </select>
+            <ExportMenu
+              onCsv={() =>
+                exportCsv(
+                  'sessions',
+                  rows.map((r) => ({
+                    session_id: r.session_id,
+                    session_name: r.session_name,
+                    user_id: r.user_id,
+                    agent_id: r.agent_id,
+                    team_id: r.team_id,
+                    updated_at: r.updated_at
+                  }))
+                )
+              }
+              onJson={() => exportJson('sessions', rows)}
+            />
+          </div>
         }
       >
-        <div className="flex items-center gap-8 text-[12px]">
-          <div>
-            <div className="label">Database</div>
-            <div className="font-mono text-muted">{config?.os_database ?? '—'}</div>
-          </div>
-          <div>
-            <div className="label">Table</div>
-            <div className="font-mono text-muted">agno_sessions</div>
-          </div>
-          <div>
-            <div className="label">Total</div>
-            <div className="font-mono text-muted">{meta?.total_count ?? '—'}</div>
-          </div>
-        </div>
+        <DbTableHeader
+          items={[
+            { label: 'Database', value: config?.os_database },
+            { label: 'Table', value: 'agno_sessions' },
+            { label: 'Total', value: meta?.total_count ?? '—' }
+          ]}
+        />
       </PageHeader>
 
       <div className="px-8 py-2">

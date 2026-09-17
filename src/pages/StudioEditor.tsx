@@ -82,25 +82,39 @@ export function StudioEditor({
           <Spinner className="h-5 w-5 text-faint" />
         </div>
       ) : (
-        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_400px]">
-          <div className="min-h-[300px] border-r border-border-soft">
-            <Suspense
-              fallback={
-                <div className="flex h-full items-center justify-center">
-                  <Spinner className="h-5 w-5 text-faint" />
-                </div>
-              }
-            >
-              <StudioCanvas
-                type={component.component_type}
-                name={component.name || component.component_id}
-                config={config}
-                onChange={setDraft}
-                agents={options.agents}
-              />
-            </Suspense>
-          </div>
-          <div className="overflow-y-auto p-6">
+        <div
+          className={
+            component.component_type === 'agent'
+              ? 'min-h-0 flex-1 overflow-y-auto'
+              : 'grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_400px]'
+          }
+        >
+          {component.component_type !== 'agent' && (
+            <div className="min-h-[300px] border-r border-border-soft">
+              <Suspense
+                fallback={
+                  <div className="flex h-full items-center justify-center">
+                    <Spinner className="h-5 w-5 text-faint" />
+                  </div>
+                }
+              >
+                <StudioCanvas
+                  type={component.component_type}
+                  name={component.name || component.component_id}
+                  config={config}
+                  onChange={setDraft}
+                  agents={options.agents}
+                />
+              </Suspense>
+            </div>
+          )}
+          <div
+            className={
+              component.component_type === 'agent'
+                ? 'mx-auto max-w-2xl p-6'
+                : 'overflow-y-auto p-6'
+            }
+          >
             <div className="mb-4 font-mono text-[11px] uppercase tracking-wider text-faint">
               v{data?.version ?? component.current_version ?? '—'}
               {data?.stage && <span> · {data.stage}</span>}

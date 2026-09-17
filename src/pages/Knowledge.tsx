@@ -14,6 +14,7 @@ import {
   StatusPill,
   ConfirmDelete
 } from '@/components/data'
+import { DbTableHeader } from '@/components/shared'
 
 function AddContentForm({
   knowledgeId,
@@ -209,20 +210,13 @@ export function Knowledge() {
           )
         }
       >
-        <div className="flex items-center gap-8 text-[12px]">
-          <div>
-            <div className="label">Database</div>
-            <div className="font-mono text-muted">{config?.os_database ?? '—'}</div>
-          </div>
-          <div>
-            <div className="label">Table</div>
-            <div className="font-mono text-muted">{active?.table ?? '—'}</div>
-          </div>
-          <div>
-            <div className="label">Documents</div>
-            <div className="font-mono text-muted">{meta?.total_count ?? '—'}</div>
-          </div>
-        </div>
+        <DbTableHeader
+          items={[
+            { label: 'Database', value: config?.os_database },
+            { label: 'Table', value: active?.table },
+            { label: 'Documents', value: meta?.total_count ?? '—' }
+          ]}
+        />
       </PageHeader>
 
       <div className="px-8 py-2">

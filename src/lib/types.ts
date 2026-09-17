@@ -132,6 +132,17 @@ export interface TraceDetail extends Trace {
   tree?: TraceSpan[]
 }
 
+export interface TraceSessionStat {
+  session_id: string
+  workflow_id?: string
+  agent_id?: string
+  team_id?: string
+  user_id?: string
+  total_traces?: number
+  first_trace_at?: string
+  last_trace_at?: string
+}
+
 export interface Memory {
   memory_id?: string
   memory?: string
@@ -215,6 +226,9 @@ export interface ServiceAccount {
   created_at?: string | number
   last_used_at?: string | number | null
   token_preview?: string
+  token_prefix?: string
+  expires_at?: string | number | null
+  token?: string
 }
 
 export interface Approval {
@@ -283,7 +297,12 @@ export interface RegistryItem {
   id: string
   name: string
   type?: string
-  metadata?: { id?: string; class_path?: string }
+  metadata?: {
+    id?: string
+    class_path?: string
+    is_toolkit?: boolean
+    functions?: { name: string; description?: string }[]
+  }
 }
 
 export interface ScheduleRun {

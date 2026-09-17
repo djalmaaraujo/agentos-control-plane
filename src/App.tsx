@@ -1,11 +1,11 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { Settings as SettingsIcon } from 'lucide-react'
 import { Layout } from '@/components/Layout'
 import { Home } from '@/pages/Home'
 import { Chat } from '@/pages/Chat'
 import { Sessions } from '@/pages/Sessions'
 import { Traces } from '@/pages/Traces'
-import { Studio } from '@/pages/Studio'
+import { StudioList } from '@/pages/StudioList'
 import { Learning } from '@/pages/Learning'
 import { Memory } from '@/pages/Memory'
 import { Knowledge } from '@/pages/Knowledge'
@@ -27,7 +27,9 @@ export default function App() {
         <Route path="chat" element={<Chat />} />
         <Route path="sessions" element={<Sessions />} />
         <Route path="traces" element={<Traces />} />
-        <Route path="studio" element={<Studio />} />
+        <Route path="studio" element={<Navigate to="/studio/agents" replace />} />
+        <Route path="studio/registry" element={<Registry />} />
+        <Route path="studio/:type" element={<StudioList />} />
         <Route path="learning/:module" element={<Learning />} />
         <Route path="memory" element={<Memory />} />
         <Route path="knowledge" element={<Knowledge />} />
@@ -36,7 +38,6 @@ export default function App() {
         <Route path="approvals" element={<Approvals />} />
         <Route path="scheduler" element={<Scheduler />} />
         <Route path="manage/service-accounts" element={<ServiceAccounts />} />
-        <Route path="manage/registry" element={<Registry />} />
         <Route path="manage/databases" element={<Databases />} />
         <Route path="settings" element={<Settings />} />
         <Route

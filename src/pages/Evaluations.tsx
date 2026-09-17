@@ -13,6 +13,7 @@ import {
   PrimitiveTag,
   StatusPill
 } from '@/components/data'
+import { DbTableHeader } from '@/components/shared'
 import { cn } from '@/lib/utils'
 
 function Chips({
@@ -167,20 +168,13 @@ export function Evaluations() {
           </select>
         }
       >
-        <div className="flex items-center gap-8 text-[12px]">
-          <div>
-            <div className="label">Database</div>
-            <div className="font-mono text-muted">{config?.os_database ?? '—'}</div>
-          </div>
-          <div>
-            <div className="label">Table</div>
-            <div className="font-mono text-muted">agno_eval_runs</div>
-          </div>
-          <div>
-            <div className="label">Total</div>
-            <div className="font-mono text-muted">{meta?.total_count ?? '—'}</div>
-          </div>
-        </div>
+        <DbTableHeader
+          items={[
+            { label: 'Database', value: config?.os_database },
+            { label: 'Table', value: 'agno_eval_runs' },
+            { label: 'Total', value: meta?.total_count ?? '—' }
+          ]}
+        />
       </PageHeader>
 
       <div className="px-8 py-2">

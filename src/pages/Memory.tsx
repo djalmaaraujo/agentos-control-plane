@@ -6,6 +6,7 @@ import { useOS } from '@/lib/osContext'
 import { formatDateTime } from '@/lib/format'
 import type { Memory as MemoryRow } from '@/lib/types'
 import { PageHeader, DataTable, Pager, Drawer, PrimitiveTag } from '@/components/data'
+import { DbTableHeader } from '@/components/shared'
 
 function MemoryForm({
   existing,
@@ -191,20 +192,13 @@ export function Memory() {
           </div>
         }
       >
-        <div className="flex items-center gap-8 text-[12px]">
-          <div>
-            <div className="label">Database</div>
-            <div className="font-mono text-muted">{config?.os_database ?? '—'}</div>
-          </div>
-          <div>
-            <div className="label">Table</div>
-            <div className="font-mono text-muted">agno_memories</div>
-          </div>
-          <div>
-            <div className="label">Total</div>
-            <div className="font-mono text-muted">{meta?.total_count ?? '—'}</div>
-          </div>
-        </div>
+        <DbTableHeader
+          items={[
+            { label: 'Database', value: config?.os_database },
+            { label: 'Table', value: 'agno_memories' },
+            { label: 'Total', value: meta?.total_count ?? '—' }
+          ]}
+        />
       </PageHeader>
 
       <div className="px-8 py-2">

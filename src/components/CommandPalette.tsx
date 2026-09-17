@@ -1,20 +1,31 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bot, CornerDownLeft, Search, Users, Workflow } from 'lucide-react'
+import {
+  Bot,
+  CornerDownLeft,
+  Globe,
+  MessageSquare,
+  Search,
+  Users,
+  Workflow
+} from 'lucide-react'
 import { useOS } from '@/lib/osContext'
+import { api } from '@/lib/api'
+import { useApi } from '@/lib/useApi'
 import { NAV } from '@/lib/nav'
+import type { Session } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface Item {
   id: string
   label: string
-  hint: string
+  group: string
   icon: typeof Bot
   action: () => void
 }
 
 export function CommandPalette() {
-  const { config } = useOS()
+  const { config, servers, active, setActive } = useOS()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -44,13 +55,28 @@ export function CommandPalette() {
     }
   }, [open])
 
+  const recents = useApi(
+    (s) => api.sessions({ sort_by: 'updated_at', sort_order: 'desc', limit: 5 }, s),
+    [open]
+  )
+
   const items = useMemo<Item[]>(() => {
     const list: Item[] = []
+    for (const sess of open ? (recents.data?.data ?? []) : []) {
+      const s = sess as Session
+      list.push({
+        id: `recent-${s.session_id}`,
+        label: s.session_name || s.session_id,
+        group: 'Recents',
+        icon: MessageSquare,
+        action: () => navigate('/sessions')
+      })
+    }
     for (const nav of NAV) {
       list.push({
         id: `nav-${nav.to}`,
         label: nav.label,
-        hint: 'Page',
+        group: 'Pages',
         icon: nav.icon as typeof Bot,
         action: () => navigate(nav.to)
       })
@@ -58,31 +84,36 @@ export function CommandPalette() {
     const push = (
       arr: { id: string; name: string }[] | undefined,
       kind: 'agent' | 'team' | 'workflow',
+      group: string,
       icon: typeof Bot
     ) => {
-      for (const c of arr ?? []) {
+      for (const c of arr ?? [])
         list.push({
           id: `${kind}-${c.id}`,
           label: c.name,
-          hint: kind[0].toUpperCase() + kind.slice(1),
+          group,
           icon,
-          action: () =>
-            kind === 'workflow'
-              ? navigate('/sessions')
-              : navigate(`/chat?type=${kind}&id=${c.id}`)
+          action: () => navigate(`/chat?type=${kind}&id=${c.id}`)
         })
-      }
     }
-    push(config?.agents, 'agent', Bot)
-    push(config?.teams, 'team', Users)
-    push(config?.workflows, 'workflow', Workflow)
+    push(config?.agents, 'agent', 'Agents', Bot)
+    push(config?.teams, 'team', 'Teams', Users)
+    push(config?.workflows, 'workflow', 'Workflows', Workflow)
+    for (const srv of servers)
+      list.push({
+        id: `srv-${srv.id}`,
+        label: `Switch to ${srv.name}${srv.id === active.id ? ' (current)' : ''}`,
+        group: 'Servers',
+        icon: Globe,
+        action: () => setActive(srv.id)
+      })
     return list
-  }, [config, navigate])
+  }, [open, recents.data, config, servers, active.id, navigate, setActive])
 
   const filtered = useMemo(() => {
-    const q = query.toLowerCase().trim()
-    if (!q) return items.slice(0, 8)
-    return items.filter((i) => i.label.toLowerCase().includes(q)).slice(0, 12)
+    const term = query.toLowerCase().trim()
+    if (!term) return items.slice(0, 12)
+    return items.filter((i) => i.label.toLowerCase().includes(term)).slice(0, 14)
   }, [items, query])
 
   useEffect(() => setCursor(0), [query])
@@ -96,12 +127,8 @@ export function CommandPalette() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]">
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={() => setOpen(false)}
-        aria-hidden
-      />
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[14vh]">
+      <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} aria-hidden />
       <div className="relative w-full max-w-xl rounded-xl border border-border bg-panel shadow-2xl">
         <div className="flex items-center gap-3 border-b border-border px-4">
           <Search className="h-4 w-4 text-faint" />
@@ -120,42 +147,47 @@ export function CommandPalette() {
                 run(filtered[cursor])
               }
             }}
-            placeholder="Search agents, teams, pages…"
+            placeholder="Type a command or search…"
             className="w-full bg-transparent py-3.5 text-sm text-white outline-none placeholder:text-faint"
           />
-          <kbd className="rounded bg-black/40 px-1.5 py-0.5 font-mono text-[10px] text-faint">
-            ESC
-          </kbd>
         </div>
-        <div className="max-h-80 overflow-y-auto p-1.5">
+        <div className="max-h-96 overflow-y-auto p-1.5">
           {filtered.length === 0 && (
-            <div className="px-3 py-8 text-center text-sm text-faint">
-              No matches
-            </div>
+            <div className="px-3 py-8 text-center text-sm text-faint">No matches</div>
           )}
           {filtered.map((i, idx) => {
             const Icon = i.icon
+            const showHeader = idx === 0 || filtered[idx - 1].group !== i.group
             return (
-              <button
-                key={i.id}
-                onMouseEnter={() => setCursor(idx)}
-                onClick={() => run(i)}
-                className={cn(
-                  'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left',
-                  idx === cursor ? 'bg-white/5' : ''
+              <div key={i.id}>
+                {showHeader && (
+                  <div className="px-3 pb-1 pt-2 font-mono text-[10px] uppercase tracking-wider text-faint">
+                    {i.group}
+                  </div>
                 )}
-              >
-                <Icon className="h-4 w-4 text-muted" strokeWidth={1.75} />
-                <span className="flex-1 text-[13px] text-white">{i.label}</span>
-                <span className="font-mono text-[10px] uppercase tracking-wider text-faint">
-                  {i.hint}
-                </span>
-                {idx === cursor && (
-                  <CornerDownLeft className="h-3.5 w-3.5 text-faint" />
-                )}
-              </button>
+                <button
+                  onMouseEnter={() => setCursor(idx)}
+                  onClick={() => run(i)}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left',
+                    idx === cursor ? 'bg-white/5' : ''
+                  )}
+                >
+                  <Icon className="h-4 w-4 text-muted" strokeWidth={1.75} />
+                  <span className="flex-1 truncate text-[13px] text-white">{i.label}</span>
+                  {idx === cursor && <CornerDownLeft className="h-3.5 w-3.5 text-faint" />}
+                </button>
+              </div>
             )
           })}
+        </div>
+        <div className="flex items-center justify-between border-t border-border px-4 py-2">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-faint">
+            {active.name}
+          </span>
+          <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-faint">
+            <CornerDownLeft className="h-3 w-3" /> select · esc close
+          </span>
         </div>
       </div>
     </div>
