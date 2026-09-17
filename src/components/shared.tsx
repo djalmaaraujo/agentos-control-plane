@@ -3,6 +3,32 @@ import { Check, Copy, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { TIME_RANGES, type TimeRangeKey } from '@/lib/timeRange'
 
+// Copy text to the clipboard, falling back to execCommand when the async
+// Clipboard API is unavailable (insecure context, e.g. plain-http access).
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {
+    // fall through to the legacy path
+  }
+  try {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(ta)
+    return ok
+  } catch {
+    return false
+  }
+}
+
 // A labelled code block with a copy-to-clipboard button.
 export function CopyBlock({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false)
@@ -11,10 +37,11 @@ export function CopyBlock({ label, value }: { label: string; value: string }) {
       <div className="mb-1 flex items-center justify-between">
         <span className="label">{label}</span>
         <button
-          onClick={() => {
-            navigator.clipboard?.writeText(value)
-            setCopied(true)
-            setTimeout(() => setCopied(false), 1200)
+          onClick={async () => {
+            if (await copyToClipboard(value)) {
+              setCopied(true)
+              setTimeout(() => setCopied(false), 1200)
+            }
           }}
           className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
         >
