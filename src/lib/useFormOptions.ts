@@ -16,7 +16,11 @@ export function useFormOptions(): FormOptions {
       tools: (reg.data?.data ?? [])
         .filter((r: RegistryItem) => r.type === 'tool' || r.type === 'function')
         .map((r: RegistryItem) => r.name),
-      agents: (config?.agents ?? []).map((a) => ({ id: a.id, name: a.name }))
+      functions: (reg.data?.data ?? [])
+        .filter((r: RegistryItem) => r.type === 'function')
+        .map((r: RegistryItem) => r.name),
+      agents: (config?.agents ?? []).map((a) => ({ id: a.id, name: a.name })),
+      teams: (config?.teams ?? []).map((t) => ({ id: t.id, name: t.name }))
     }),
     [config, reg.data]
   )

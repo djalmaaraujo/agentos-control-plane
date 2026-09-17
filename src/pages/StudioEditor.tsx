@@ -104,6 +104,8 @@ export function StudioEditor({
                   config={config}
                   onChange={setDraft}
                   agents={options.agents}
+                  teams={options.teams}
+                  functions={options.functions}
                 />
               </Suspense>
             </div>

@@ -10,6 +10,8 @@ export interface FormOptions {
   models: { id?: string; provider?: string }[]
   tools: string[]
   agents: { id: string; name?: string }[]
+  teams: { id: string; name?: string }[]
+  functions: string[]
 }
 
 function Label({ children }: { children: React.ReactNode }) {
