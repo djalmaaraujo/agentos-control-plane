@@ -1,5 +1,7 @@
 # AgentOS Control Plane
 
+[![CI](https://github.com/djalmaaraujo/agentos-control-plane/actions/workflows/ci.yml/badge.svg)](https://github.com/djalmaaraujo/agentos-control-plane/actions/workflows/ci.yml)
+
 A self-hosted control plane for [AgentOS](https://docs.agno.com/agent-os/overview).
 It's a single-page React app that talks to the AgentOS REST API directly from the
 browser — a lightweight, open alternative to the hosted dashboard.
