@@ -1,12 +1,16 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { ChevronLeft, Loader2, Check } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
 import { formatDateTime } from '@/lib/format'
 import type { Component, ComponentConfig } from '@/lib/types'
 import { ComponentForm, type FormOptions } from '@/components/ComponentForm'
-import { StudioCanvas } from '@/components/StudioCanvas'
 import { Spinner } from '@/components/ui'
+
+// React Flow is heavy and only needed here — load it as its own chunk on demand.
+const StudioCanvas = lazy(() =>
+  import('@/components/StudioCanvas').then((m) => ({ default: m.StudioCanvas }))
+)
 
 export function StudioEditor({
   component,
@@ -80,13 +84,21 @@ export function StudioEditor({
       ) : (
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_400px]">
           <div className="min-h-[300px] border-r border-border-soft">
-            <StudioCanvas
-              type={component.component_type}
-              name={component.name || component.component_id}
-              config={config}
-              onChange={setDraft}
-              agents={options.agents}
-            />
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center">
+                  <Spinner className="h-5 w-5 text-faint" />
+                </div>
+              }
+            >
+              <StudioCanvas
+                type={component.component_type}
+                name={component.name || component.component_id}
+                config={config}
+                onChange={setDraft}
+                agents={options.agents}
+              />
+            </Suspense>
           </div>
           <div className="overflow-y-auto p-6">
             <div className="mb-4 font-mono text-[11px] uppercase tracking-wider text-faint">
