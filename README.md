@@ -22,7 +22,8 @@ proxy serves the app and forwards `/api` to your AgentOS runtime.
   tool), with per-span input, output and metadata.
 - **Studio** — build and version agents, teams and workflows at runtime with a
   guided form (model, instructions, tools, members, mode, history) or raw config
-  JSON; manage config versions and set the current one.
+  JSON; teams and workflows get a visual canvas (React Flow) — members and steps
+  as a graph you can edit — and config versions you can set current.
 - **Learning** — user memories, profiles, entity memories, session context and
   decision logs.
 - **Memory** — stored memories with search; create, edit, delete and optimize.

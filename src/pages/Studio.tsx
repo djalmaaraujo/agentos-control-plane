@@ -19,6 +19,7 @@ import {
   ConfirmDelete
 } from '@/components/data'
 import { ComponentForm, type FormOptions } from '@/components/ComponentForm'
+import { StudioEditor } from './StudioEditor'
 import { Spinner } from '@/components/ui'
 
 const TYPE_ICON = { agent: Bot, team: Users, workflow: Workflow }
@@ -242,8 +243,25 @@ export function Studio() {
   const options = useFormOptions()
   const [creating, setCreating] = useState(false)
   const [selected, setSelected] = useState<Component | null>(null)
+  const [editorFor, setEditorFor] = useState<Component | null>(null)
   const { rows, meta, loading, error, page, setPage, reload } =
     usePaginatedList<Component>((params, s) => api.components(params, s), { limit: 25 })
+
+  const openComponent = (c: Component) => {
+    if (c.component_type === 'agent') setSelected(c)
+    else setEditorFor(c)
+  }
+
+  if (editorFor) {
+    return (
+      <StudioEditor
+        component={editorFor}
+        options={options}
+        onBack={() => setEditorFor(null)}
+        onChanged={reload}
+      />
+    )
+  }
 
   return (
     <div>
@@ -315,7 +333,7 @@ export function Studio() {
           error={error}
           empty="No components built yet. Create one to get started."
           getKey={(r) => r.component_id}
-          onRowClick={setSelected}
+          onRowClick={openComponent}
         />
         <Pager page={page} totalPages={meta?.total_pages ?? 1} onPage={setPage} />
       </div>
