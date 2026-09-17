@@ -148,7 +148,7 @@ export function CommandPalette() {
               }
             }}
             placeholder="Type a command or search…"
-            className="w-full bg-transparent py-3.5 text-sm text-white outline-none placeholder:text-faint"
+            className="w-full bg-transparent py-3.5 text-sm text-fg outline-none placeholder:text-faint"
           />
         </div>
         <div className="max-h-96 overflow-y-auto p-1.5">
@@ -170,11 +170,11 @@ export function CommandPalette() {
                   onClick={() => run(i)}
                   className={cn(
                     'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left',
-                    idx === cursor ? 'bg-white/5' : ''
+                    idx === cursor ? 'bg-hover' : ''
                   )}
                 >
                   <Icon className="h-4 w-4 text-muted" strokeWidth={1.75} />
-                  <span className="flex-1 truncate text-[13px] text-white">{i.label}</span>
+                  <span className="flex-1 truncate text-[13px] text-fg">{i.label}</span>
                   {idx === cursor && <CornerDownLeft className="h-3.5 w-3.5 text-faint" />}
                 </button>
               </div>

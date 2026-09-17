@@ -27,7 +27,7 @@ function DbRow({ db }: { db: string }) {
     <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
       <div className="flex items-center gap-3">
         <Database className="h-4 w-4 text-accent" strokeWidth={1.75} />
-        <span className="font-mono text-[13px] text-white">{db}</span>
+        <span className="font-mono text-[13px] text-fg">{db}</span>
       </div>
       <div className="flex items-center gap-2">
         {done && (
@@ -48,7 +48,7 @@ function DbRow({ db }: { db: string }) {
             </button>
             <button
               onClick={() => setConfirm(false)}
-              className="rounded-md border border-border px-3 py-1.5 text-[12px] text-muted hover:bg-white/5"
+              className="rounded-md border border-border px-3 py-1.5 text-[12px] text-muted hover:bg-hover"
             >
               Cancel
             </button>
@@ -56,7 +56,7 @@ function DbRow({ db }: { db: string }) {
         ) : (
           <button
             onClick={() => setConfirm(true)}
-            className="rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-white/5 hover:text-white"
+            className="rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-hover hover:text-fg"
           >
             Migrate
           </button>

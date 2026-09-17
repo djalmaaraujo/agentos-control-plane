@@ -35,7 +35,7 @@ export function ComponentCard({
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-black">
             <Icon className="h-4 w-4" strokeWidth={2} />
           </div>
-          <span className="font-medium text-white">{component.name}</span>
+          <span className="font-medium text-fg">{component.name}</span>
         </div>
         {model && <Badge>{model}</Badge>}
       </div>

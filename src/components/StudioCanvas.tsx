@@ -42,7 +42,7 @@ function RootNode({ data }: NodeProps) {
           <Icon className="h-3.5 w-3.5" strokeWidth={2} />
         </span>
         <div className="min-w-0">
-          <div className="truncate text-[13px] font-medium text-white">{d.label}</div>
+          <div className="truncate text-[13px] font-medium text-fg">{d.label}</div>
           <div className="font-mono text-[9px] uppercase tracking-wider text-faint">{d.type}</div>
         </div>
       </div>
@@ -58,7 +58,7 @@ function MemberNode({ data }: NodeProps) {
     <div className="group flex min-w-[160px] items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 shadow">
       <Handle type="target" position={Position.Left} className="!bg-border" />
       <Bot className="h-3.5 w-3.5 text-accent" strokeWidth={2} />
-      <span className="flex-1 truncate text-[12px] text-white">{d.label}</span>
+      <span className="flex-1 truncate text-[12px] text-fg">{d.label}</span>
       <button
         onClick={d.onRemove}
         className="text-faint opacity-0 hover:text-red-300 group-hover:opacity-100"
@@ -87,12 +87,12 @@ function StepNode({ data }: NodeProps) {
       <Handle type="target" position={Position.Top} className="!bg-border" />
       <div className="flex items-center gap-2">
         <Icon className="h-3.5 w-3.5 text-accent" strokeWidth={2} />
-        <span className="flex-1 truncate text-[12px] text-white">{d.label}</span>
+        <span className="flex-1 truncate text-[12px] text-fg">{d.label}</span>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
-          <button onClick={d.onUp} disabled={d.first} className="text-faint hover:text-white disabled:opacity-30">
+          <button onClick={d.onUp} disabled={d.first} className="text-faint hover:text-fg disabled:opacity-30">
             <ChevronUp className="h-3.5 w-3.5" />
           </button>
-          <button onClick={d.onDown} disabled={d.last} className="text-faint hover:text-white disabled:opacity-30">
+          <button onClick={d.onDown} disabled={d.last} className="text-faint hover:text-fg disabled:opacity-30">
             <ChevronDown className="h-3.5 w-3.5" />
           </button>
           <button onClick={d.onRemove} className="text-faint hover:text-red-300">
@@ -118,7 +118,7 @@ function PaletteItem({ item, icon: Icon }: { item: DragItem; icon: typeof Bot })
         e.dataTransfer.setData('application/studio', JSON.stringify(item))
         e.dataTransfer.effectAllowed = 'move'
       }}
-      className="flex cursor-grab items-center gap-1.5 rounded border border-border bg-black/30 px-2 py-1 font-mono text-[11px] text-muted hover:border-accent hover:text-white active:cursor-grabbing"
+      className="flex cursor-grab items-center gap-1.5 rounded border border-border bg-inset px-2 py-1 font-mono text-[11px] text-muted hover:border-accent hover:text-fg active:cursor-grabbing"
     >
       <Icon className="h-3 w-3 text-accent" />
       {item.name}
@@ -362,7 +362,7 @@ function Canvas({
         proOptions={{ hideAttribution: true }}
         className="bg-bg"
       >
-        <Background color="#242427" gap={18} />
+        <Background color="var(--c-border)" gap={18} />
         <Controls showInteractive={false} className="!border-border !bg-panel" />
       </ReactFlow>
     </div>

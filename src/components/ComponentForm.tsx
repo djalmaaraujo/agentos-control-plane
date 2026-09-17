@@ -31,7 +31,7 @@ function Toggle({
       onClick={() => onChange(!checked)}
       className={cn(
         'relative h-5 w-9 rounded-full transition-colors',
-        checked ? 'bg-accent' : 'bg-[#2a2a2e]'
+        checked ? 'bg-accent' : 'bg-hoverstrong'
       )}
     >
       <span
@@ -69,12 +69,12 @@ function MultiChips({
     ? options.filter((o) => (labelOf?.(o) ?? o).toLowerCase().includes(q.toLowerCase()))
     : options
   return (
-    <div className="rounded-lg border border-border bg-black/20 p-2">
+    <div className="rounded-lg border border-border bg-inset p-2">
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Filter…"
-        className="mb-2 w-full bg-transparent px-1 text-[12px] text-white outline-none placeholder:text-faint"
+        className="mb-2 w-full bg-transparent px-1 text-[12px] text-fg outline-none placeholder:text-faint"
       />
       <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
         {shown.length === 0 && <span className="px-1 text-[12px] text-faint">None</span>}
@@ -89,7 +89,7 @@ function MultiChips({
                 'rounded border px-2 py-1 font-mono text-[11px]',
                 on
                   ? 'border-accent bg-accent-dim text-accent'
-                  : 'border-border bg-black/30 text-muted hover:text-white'
+                  : 'border-border bg-inset text-muted hover:text-fg'
               )}
             >
               {labelOf?.(o) ?? o}
@@ -144,7 +144,7 @@ export function ComponentForm({
           <input
             value={str('description')}
             onChange={(e) => set('description', e.target.value)}
-            className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+            className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
           />
         </div>
         <div>
@@ -191,7 +191,7 @@ export function ComponentForm({
           value={str('instructions')}
           onChange={(e) => set('instructions', e.target.value)}
           rows={5}
-          className="w-full resize-y rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="w-full resize-y rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
         />
       </div>
 
@@ -200,7 +200,7 @@ export function ComponentForm({
         <input
           value={str('description')}
           onChange={(e) => set('description', e.target.value)}
-          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
         />
       </div>
 
@@ -211,7 +211,7 @@ export function ComponentForm({
             <input
               value={str('role')}
               onChange={(e) => set('role', e.target.value)}
-              className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+              className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
             />
           </div>
           <div>
@@ -279,7 +279,7 @@ export function ComponentForm({
             onChange={(e) =>
               set('num_history_runs', e.target.value ? Number(e.target.value) : undefined)
             }
-            className="w-20 rounded-md border border-border bg-panel px-2 py-1 text-right text-sm text-white outline-none focus:border-accent"
+            className="w-20 rounded-md border border-border bg-panel px-2 py-1 text-right text-sm text-fg outline-none focus:border-accent"
           />
         </Row>
       </div>

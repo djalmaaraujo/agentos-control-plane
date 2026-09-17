@@ -38,7 +38,7 @@ export function JsonEditor({
         }}
         rows={rows}
         className={cn(
-          'w-full resize-y rounded-lg border bg-black/40 p-3 font-mono text-[12px] leading-relaxed text-muted outline-none',
+          'w-full resize-y rounded-lg border bg-inset p-3 font-mono text-[12px] leading-relaxed text-muted outline-none',
           error ? 'border-red-900/60 focus:border-red-700' : 'border-border focus:border-accent'
         )}
       />

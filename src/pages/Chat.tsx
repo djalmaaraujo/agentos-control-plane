@@ -6,7 +6,9 @@ import {
   Brain,
   Check,
   ChevronRight,
+  GitFork,
   History,
+  Paperclip,
   Pencil,
   Plus,
   Square,
@@ -47,7 +49,7 @@ interface ChatMsg {
 function Reasoning({ text }: { text: string }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="mb-2 rounded-lg border border-border bg-black/20">
+    <div className="mb-2 rounded-lg border border-border bg-inset">
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center gap-2 px-3 py-1.5 text-left"
@@ -70,14 +72,14 @@ function Reasoning({ text }: { text: string }) {
 function StepView({ step }: { step: WorkflowStep }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="rounded-lg border border-border bg-black/30">
+    <div className="rounded-lg border border-border bg-inset">
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center gap-2 px-3 py-2 text-left"
       >
         <ChevronRight className={cn('h-3.5 w-3.5 text-faint transition-transform', open && 'rotate-90')} />
         <Workflow className="h-3.5 w-3.5 text-accent" />
-        <span className="flex-1 truncate font-mono text-[12px] text-white">{step.name}</span>
+        <span className="flex-1 truncate font-mono text-[12px] text-fg">{step.name}</span>
         {step.done ? (
           <Check className="h-3.5 w-3.5 text-emerald-400" />
         ) : (
@@ -137,12 +139,12 @@ function SessionRow({
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && save()}
-          className="flex-1 bg-transparent text-[13px] text-white outline-none"
+          className="flex-1 bg-transparent text-[13px] text-fg outline-none"
         />
         <button onClick={save} disabled={busy} className="text-emerald-400 hover:text-emerald-300">
           <Check className="h-3.5 w-3.5" />
         </button>
-        <button onClick={() => setEditing(false)} className="text-faint hover:text-white">
+        <button onClick={() => setEditing(false)} className="text-faint hover:text-fg">
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
@@ -150,9 +152,9 @@ function SessionRow({
   }
 
   return (
-    <div className="group flex items-center gap-1 rounded-md border border-border-soft px-3 py-2 hover:bg-white/5">
+    <div className="group flex items-center gap-1 rounded-md border border-border-soft px-3 py-2 hover:bg-hover">
       <button onClick={() => onPick(sess.session_id)} className="flex min-w-0 flex-1 flex-col items-start text-left">
-        <span className="line-clamp-1 text-[13px] text-white">
+        <span className="line-clamp-1 text-[13px] text-fg">
           {sess.session_name || sess.session_id}
         </span>
         <span className="font-mono text-[11px] text-faint">
@@ -165,13 +167,13 @@ function SessionRow({
           <button onClick={del} disabled={busy} className="text-red-400 hover:text-red-300">
             <Check className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => setConfirmDel(false)} className="text-faint hover:text-white">
+          <button onClick={() => setConfirmDel(false)} className="text-faint hover:text-fg">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
       ) : (
         <div className="hidden items-center gap-1.5 group-hover:flex">
-          <button onClick={() => setEditing(true)} className="text-faint hover:text-white" title="Rename">
+          <button onClick={() => setEditing(true)} className="text-faint hover:text-fg" title="Rename">
             <Pencil className="h-3.5 w-3.5" />
           </button>
           <button onClick={() => setConfirmDel(true)} className="text-faint hover:text-red-300" title="Delete">
@@ -249,6 +251,7 @@ export function Chat() {
 
   const [messages, setMessages] = useState<ChatMsg[]>([])
   const [input, setInput] = useState('')
+  const [files, setFiles] = useState<File[]>([])
   const [streaming, setStreaming] = useState(false)
   const [showSessions, setShowSessions] = useState(false)
   const [loadingSession, setLoadingSession] = useState(false)
@@ -322,6 +325,8 @@ export function Chat() {
     form.set('message', text)
     form.set('stream', 'true')
     if (sessionId.current) form.set('session_id', sessionId.current)
+    for (const f of files) form.append('files', f)
+    setFiles([])
 
     const base =
       type === 'team' ? 'teams' : type === 'workflow' ? 'workflows' : 'agents'
@@ -413,13 +418,28 @@ export function Chat() {
     setStreaming(false)
   }
 
+  const fork = async () => {
+    if (!current || !sessionId.current || type === 'workflow') return
+    setLoadingSession(true)
+    try {
+      const res = await api.forkSession(type, current.id, sessionId.current)
+      if (res.session_id) {
+        sessionId.current = res.session_id
+        const runs = await api.sessionRuns(res.session_id)
+        setMessages(runsToMessages(runs))
+      }
+    } finally {
+      setLoadingSession(false)
+    }
+  }
+
   const Picker = useMemo(
     () => (
       <div className="flex items-center gap-2">
         <select
           value={type}
           onChange={(e) => setType(e.target.value as Kind)}
-          className="rounded-md border border-border bg-panel px-2.5 py-1.5 text-[12px] text-muted outline-none hover:bg-white/5"
+          className="rounded-md border border-border bg-panel px-2.5 py-1.5 text-[12px] text-muted outline-none hover:bg-hover"
         >
           <option value="agent">Agents</option>
           <option value="team">Teams</option>
@@ -428,7 +448,7 @@ export function Chat() {
         <select
           value={current?.id ?? ''}
           onChange={(e) => setParams({ type, id: e.target.value })}
-          className="rounded-md border border-border bg-panel px-2.5 py-1.5 text-[13px] text-white outline-none hover:bg-white/5"
+          className="rounded-md border border-border bg-panel px-2.5 py-1.5 text-[13px] text-fg outline-none hover:bg-hover"
         >
           {list.map((c) => (
             <option key={c.id} value={c.id}>
@@ -449,14 +469,23 @@ export function Chat() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowSessions(true)}
-            className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-white/5 hover:text-white"
+            className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-hover hover:text-fg"
           >
             <History className="h-3.5 w-3.5" />
             Sessions
           </button>
+          {type !== 'workflow' && messages.length > 0 && (
+            <button
+              onClick={fork}
+              className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-hover hover:text-fg"
+            >
+              <GitFork className="h-3.5 w-3.5" />
+              Fork
+            </button>
+          )}
           <button
             onClick={newSession}
-            className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-white/5 hover:text-white"
+            className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-hover hover:text-fg"
           >
             <Plus className="h-3.5 w-3.5" />
             New session
@@ -475,7 +504,7 @@ export function Chat() {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-black">
                 {type === 'team' ? <Users className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
               </div>
-              <div className="mt-4 text-lg font-semibold text-white">
+              <div className="mt-4 text-lg font-semibold text-fg">
                 {current?.name ?? 'Chat'}
               </div>
               {manifest?.description && (
@@ -486,7 +515,7 @@ export function Chat() {
                   <button
                     key={q}
                     onClick={() => send(q)}
-                    className="rounded-full border border-border bg-card px-3 py-1.5 text-[13px] text-muted hover:border-[#3a3a40] hover:text-white"
+                    className="rounded-full border border-border bg-card px-3 py-1.5 text-[13px] text-muted hover:border-border hover:text-fg"
                   >
                     {q}
                   </button>
@@ -513,7 +542,7 @@ export function Chat() {
                         <ToolCallView key={t.id} call={t} />
                       ))}
                       {m.content ? (
-                        <div className="rounded-2xl border border-border bg-card px-4 py-2.5 text-[#ededef]">
+                        <div className="rounded-2xl border border-border bg-card px-4 py-2.5 text-fg">
                           <Markdown>{m.content}</Markdown>
                         </div>
                       ) : (
@@ -534,7 +563,38 @@ export function Chat() {
       </div>
 
       <div className="border-t border-border-soft px-8 py-4">
+        {files.length > 0 && (
+          <div className="mx-auto mb-2 flex max-w-3xl flex-wrap gap-1.5">
+            {files.map((f, i) => (
+              <span
+                key={i}
+                className="flex items-center gap-1.5 rounded border border-border bg-card px-2 py-1 text-[11px] text-muted"
+              >
+                <Paperclip className="h-3 w-3" />
+                {f.name}
+                <button
+                  onClick={() => setFiles(files.filter((_, idx) => idx !== i))}
+                  className="text-faint hover:text-red-300"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
         <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-xl border border-border bg-card px-3 py-2">
+          <label className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-faint hover:bg-hover hover:text-fg">
+            <Paperclip className="h-4 w-4" />
+            <input
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                setFiles([...files, ...Array.from(e.target.files ?? [])])
+                e.target.value = ''
+              }}
+            />
+          </label>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -546,7 +606,7 @@ export function Chat() {
             }}
             rows={1}
             placeholder={`Message ${current?.name ?? '…'}`}
-            className="max-h-40 flex-1 resize-none bg-transparent py-1.5 text-[14px] text-white outline-none placeholder:text-faint"
+            className="max-h-40 flex-1 resize-none bg-transparent py-1.5 text-[14px] text-fg outline-none placeholder:text-faint"
           />
           {streaming ? (
             <button
@@ -555,7 +615,7 @@ export function Chat() {
                 setStreaming(false)
               }}
               title="Stop"
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-hoverstrong text-fg hover:bg-hoverstrong"
             >
               <Square className="h-3.5 w-3.5 fill-current" />
             </button>

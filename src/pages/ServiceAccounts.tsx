@@ -21,7 +21,7 @@ function CreatedToken({ token, onClose }: { token: string; onClose: () => void }
           setCopied(true)
           setTimeout(() => setCopied(false), 1500)
         }}
-        className="flex w-full items-center gap-2 rounded-md border border-border bg-black/40 px-3 py-2.5 text-left"
+        className="flex w-full items-center gap-2 rounded-md border border-border bg-inset px-3 py-2.5 text-left"
       >
         <span className="flex-1 break-all font-mono text-[12px] text-muted">{token}</span>
         {copied ? (
@@ -74,7 +74,7 @@ function CreateForm({ onCreated }: { onCreated: (token?: string) => void }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. ci-deploy"
-          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
         />
       </div>
       <label className="flex items-center gap-2 text-[13px] text-muted">
@@ -93,7 +93,7 @@ function CreateForm({ onCreated }: { onCreated: (token?: string) => void }) {
             min={1}
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="w-32 rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+            className="w-32 rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
           />
         </div>
       )}
@@ -171,7 +171,7 @@ export function ServiceAccounts() {
                 {
                   key: 'name',
                   header: 'Name',
-                  render: (r) => <span className="text-white">{r.name || r.id}</span>
+                  render: (r) => <span className="text-fg">{r.name || r.id}</span>
                 },
                 {
                   key: 'token',

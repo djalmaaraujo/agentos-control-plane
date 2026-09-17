@@ -49,8 +49,8 @@ function Card({
   return (
     <div className="rounded-lg border border-border bg-card p-5">
       <div className="mb-4 flex items-baseline justify-between">
-        <h3 className="text-[15px] font-medium text-white">{title}</h3>
-        <span className="text-xl font-semibold text-white">{total}</span>
+        <h3 className="text-[15px] font-medium text-fg">{title}</h3>
+        <span className="text-xl font-semibold text-fg">{total}</span>
       </div>
       {children}
     </div>
@@ -126,19 +126,19 @@ export function Metrics() {
             <button
               onClick={recalculate}
               disabled={recalculating}
-              className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-white/5 hover:text-white disabled:opacity-40"
+              className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-hover hover:text-fg disabled:opacity-40"
             >
               <RotateCw className={cn('h-3.5 w-3.5', recalculating && 'animate-spin')} />
               Recalculate
             </button>
             <div className="flex items-center rounded-md border border-border">
-              <button onClick={() => shiftMonth(-1)} className="p-1.5 text-muted hover:bg-white/5">
+              <button onClick={() => shiftMonth(-1)} className="p-1.5 text-muted hover:bg-hover">
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <span className="px-3 font-mono text-[12px] text-muted">
                 {MONTHS[month]} {year}
               </span>
-              <button onClick={() => shiftMonth(1)} className="p-1.5 text-muted hover:bg-white/5">
+              <button onClick={() => shiftMonth(1)} className="p-1.5 text-muted hover:bg-hover">
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>

@@ -50,7 +50,7 @@ export function Approvals() {
               key: 'tool_name',
               header: 'Tool',
               render: (r) => (
-                <span className="font-mono text-[13px] text-white">
+                <span className="font-mono text-[13px] text-fg">
                   {r.tool_name || r.id}
                 </span>
               )

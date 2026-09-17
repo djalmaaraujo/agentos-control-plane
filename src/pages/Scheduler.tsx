@@ -58,7 +58,7 @@ function ScheduleForm({ onSaved }: { onSaved: () => void }) {
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -82,7 +82,7 @@ function ScheduleForm({ onSaved }: { onSaved: () => void }) {
           <select
             value={id}
             onChange={(e) => setTargetId(e.target.value)}
-            className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none"
+            className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none"
           >
             {list.map((c) => (
               <option key={c.id} value={c.id}>
@@ -98,7 +98,7 @@ function ScheduleForm({ onSaved }: { onSaved: () => void }) {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={3}
-          className="w-full resize-y rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="w-full resize-y rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -107,7 +107,7 @@ function ScheduleForm({ onSaved }: { onSaved: () => void }) {
           <input
             value={cron}
             onChange={(e) => setCron(e.target.value)}
-            className="w-full rounded-md border border-border bg-panel px-3 py-2 font-mono text-sm text-white outline-none focus:border-accent"
+            className="w-full rounded-md border border-border bg-panel px-3 py-2 font-mono text-sm text-fg outline-none focus:border-accent"
           />
         </div>
         <div>
@@ -115,7 +115,7 @@ function ScheduleForm({ onSaved }: { onSaved: () => void }) {
           <input
             value={tz}
             onChange={(e) => setTz(e.target.value)}
-            className="w-full rounded-md border border-border bg-panel px-3 py-2 font-mono text-sm text-white outline-none focus:border-accent"
+            className="w-full rounded-md border border-border bg-panel px-3 py-2 font-mono text-sm text-fg outline-none focus:border-accent"
           />
         </div>
       </div>
@@ -179,7 +179,7 @@ function ScheduleDetail({ schedule }: { schedule: Schedule }) {
         )}
         <div className="space-y-2">
           {runs.map((r: ScheduleRun) => (
-            <div key={r.id} className="rounded-lg border border-border-soft bg-black/30 p-3">
+            <div key={r.id} className="rounded-lg border border-border-soft bg-inset p-3">
               <div className="mb-1 flex items-center gap-2">
                 <StatusPill status={r.status} />
                 {r.status_code != null && (
@@ -247,7 +247,7 @@ export function Scheduler() {
               header: 'Name',
               render: (r) => (
                 <div className="min-w-0">
-                  <div className="text-white">{r.name || r.id}</div>
+                  <div className="text-fg">{r.name || r.id}</div>
                   {r.description && (
                     <div className="max-w-md truncate text-[11px] text-faint">
                       {r.description}
@@ -307,7 +307,7 @@ export function Scheduler() {
                     disabled={busy === r.id}
                     title="Trigger now"
                     onClick={() => act(r.id, () => api.triggerSchedule(r.id))}
-                    className="rounded border border-border p-1.5 text-muted hover:bg-white/5 hover:text-white disabled:opacity-40"
+                    className="rounded border border-border p-1.5 text-muted hover:bg-hover hover:text-fg disabled:opacity-40"
                   >
                     <Play className="h-3.5 w-3.5" />
                   </button>
@@ -322,8 +322,8 @@ export function Scheduler() {
                       )
                     }
                     className={cn(
-                      'rounded border border-border p-1.5 hover:bg-white/5 disabled:opacity-40',
-                      r.enabled ? 'text-emerald-400' : 'text-faint hover:text-white'
+                      'rounded border border-border p-1.5 hover:bg-hover disabled:opacity-40',
+                      r.enabled ? 'text-emerald-400' : 'text-faint hover:text-fg'
                     )}
                   >
                     <Power className="h-3.5 w-3.5" />

@@ -12,7 +12,7 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-lg border border-border bg-card transition-colors hover:border-[#33333a] hover:bg-card-hover',
+        'rounded-lg border border-border bg-card transition-colors hover:border-border hover:bg-card-hover',
         className
       )}
     >
@@ -23,7 +23,7 @@ export function Card({
 
 export function Badge({ children }: { children: ReactNode }) {
   return (
-    <span className="rounded border border-border bg-black/30 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-accent">
+    <span className="rounded border border-border bg-inset px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-accent">
       {children}
     </span>
   )
@@ -39,7 +39,7 @@ export function PillButton({
   return (
     <button
       onClick={onClick}
-      className="rounded border border-border bg-transparent px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted transition-colors hover:border-[#3a3a40] hover:bg-white/5 hover:text-white"
+      className="rounded border border-border bg-transparent px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted transition-colors hover:border-border hover:bg-hover hover:text-fg"
     >
       {children}
     </button>

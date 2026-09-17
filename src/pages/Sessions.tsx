@@ -31,7 +31,7 @@ function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <div className="label mb-1">{label}</div>
-      <div className="text-[15px] text-white">{value}</div>
+      <div className="text-[15px] text-fg">{value}</div>
     </div>
   )
 }
@@ -77,7 +77,7 @@ function RunsTab({ session }: { session: Session }) {
             {m.role === 'assistant' ? (
               <Markdown>{m.content}</Markdown>
             ) : (
-              <p className="whitespace-pre-wrap text-[14px] text-[#ededef]">
+              <p className="whitespace-pre-wrap text-[14px] text-fg">
                 {m.content}
               </p>
             )}
@@ -166,7 +166,7 @@ function SessionDetail({ session }: { session: Session }) {
             onClick={() => setTab(t)}
             className={cn(
               'border-b-2 py-2.5 font-mono text-[11px] uppercase tracking-wider',
-              tab === t ? 'border-accent text-white' : 'border-transparent text-faint hover:text-muted'
+              tab === t ? 'border-accent text-fg' : 'border-transparent text-faint hover:text-muted'
             )}
           >
             {t}
@@ -219,7 +219,7 @@ export function Sessions() {
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
-              className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-white/5"
+              className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-hover"
             >
               <option value="">All</option>
               <option value="agent">Agents</option>
@@ -261,7 +261,7 @@ export function Sessions() {
               key: 'session_name',
               header: 'Session name',
               render: (r) => (
-                <span className="text-white">
+                <span className="text-fg">
                   {r.session_name || <span className="text-faint">Untitled</span>}
                 </span>
               )

@@ -39,9 +39,9 @@ function RegistryCard({
   const shown = fns.slice(0, 6)
   return (
     <Card className="flex flex-col p-4">
-      <div className="font-medium text-white">{item.name}</div>
+      <div className="font-medium text-fg">{item.name}</div>
       <div className="mt-1.5">
-        <span className="rounded border border-border bg-black/30 px-2 py-0.5 font-mono text-[10px] uppercase text-muted">
+        <span className="rounded border border-border bg-inset px-2 py-0.5 font-mono text-[10px] uppercase text-muted">
           {item.metadata?.id || item.name}
         </span>
       </div>
@@ -50,7 +50,7 @@ function RegistryCard({
           {shown.map((f) => (
             <span
               key={f.name}
-              className="rounded border border-border-soft bg-black/20 px-1.5 py-0.5 font-mono text-[10px] uppercase text-faint"
+              className="rounded border border-border-soft bg-inset px-1.5 py-0.5 font-mono text-[10px] uppercase text-faint"
             >
               {f.name}
             </span>
@@ -64,7 +64,7 @@ function RegistryCard({
       )}
       <button
         onClick={onOpen}
-        className="mt-4 self-start font-mono text-[10px] uppercase tracking-wider text-faint hover:text-white"
+        className="mt-4 self-start font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
       >
         See details ↗
       </button>

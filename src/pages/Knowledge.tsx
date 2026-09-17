@@ -66,7 +66,7 @@ function AddContentForm({
             onClick={() => setSource(s)}
             className={
               'flex-1 rounded px-2 py-1.5 font-mono text-[11px] uppercase ' +
-              (source === s ? 'bg-white/10 text-white' : 'text-faint')
+              (source === s ? 'bg-hoverstrong text-fg' : 'text-faint')
             }
           >
             {s}
@@ -79,7 +79,7 @@ function AddContentForm({
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
         />
       </div>
       <div>
@@ -87,7 +87,7 @@ function AddContentForm({
         <input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
         />
       </div>
 
@@ -98,7 +98,7 @@ function AddContentForm({
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={6}
-            className="w-full resize-y rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+            className="w-full resize-y rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
           />
         </div>
       )}
@@ -109,7 +109,7 @@ function AddContentForm({
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://…"
-            className="w-full rounded-md border border-border bg-panel px-3 py-2 font-mono text-[13px] text-white outline-none focus:border-accent"
+            className="w-full rounded-md border border-border bg-panel px-3 py-2 font-mono text-[13px] text-fg outline-none focus:border-accent"
           />
         </div>
       )}
@@ -119,7 +119,7 @@ function AddContentForm({
           <input
             type="file"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="w-full text-[13px] text-muted file:mr-3 file:rounded file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-white"
+            className="w-full text-[13px] text-muted file:mr-3 file:rounded file:border-0 file:bg-hoverstrong file:px-3 file:py-1.5 file:text-fg"
           />
         </div>
       )}
@@ -151,7 +151,7 @@ function RefreshButton({ id, onDone }: { id: string; onDone: () => void }) {
           setBusy(false)
         }
       }}
-      className="text-faint hover:text-white"
+      className="text-faint hover:text-fg"
       title="Refresh (re-embed)"
     >
       <RotateCw className={busy ? 'h-3.5 w-3.5 animate-spin' : 'h-3.5 w-3.5'} />
@@ -190,7 +190,7 @@ export function Knowledge() {
               <select
                 value={kid}
                 onChange={(e) => setKid(e.target.value)}
-                className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-white/5"
+                className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-hover"
               >
                 {instances.map((i) => (
                   <option key={i.id} value={i.id}>
@@ -225,7 +225,7 @@ export function Knowledge() {
             {
               key: 'name',
               header: 'Name',
-              render: (r) => <span className="text-white">{r.name || r.id}</span>
+              render: (r) => <span className="text-fg">{r.name || r.id}</span>
             },
             {
               key: 'type',
@@ -302,7 +302,7 @@ export function Knowledge() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="label mb-1">Name</div>
-                <div className="text-[13px] text-white">{selected.name || '—'}</div>
+                <div className="text-[13px] text-fg">{selected.name || '—'}</div>
               </div>
               <div>
                 <div className="label mb-1">Type</div>

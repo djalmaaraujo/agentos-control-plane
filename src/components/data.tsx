@@ -24,7 +24,7 @@ export function ConfirmDelete({ onConfirm }: { onConfirm: () => Promise<void> })
           <button disabled={busy} onClick={run} className="text-red-400 hover:text-red-300">
             <Check className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => setConfirm(false)} className="text-faint hover:text-white">
+          <button onClick={() => setConfirm(false)} className="text-faint hover:text-fg">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -75,7 +75,7 @@ export function PageHeader({
   return (
     <div className="border-b border-border-soft px-8 pb-4 pt-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-[15px] font-semibold text-white">{title}</h1>
+        <h1 className="text-[15px] font-semibold text-fg">{title}</h1>
         {actions && <div className="flex items-center gap-2">{actions}</div>}
       </div>
       {children && <div className="mt-3">{children}</div>}
@@ -164,7 +164,7 @@ export function DataTable<T>({
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               className={cn(
                 'border-b border-border-soft transition-colors',
-                onRowClick && 'cursor-pointer hover:bg-white/[0.03]'
+                onRowClick && 'cursor-pointer hover:bg-hover'
               )}
             >
               {columns.map((c) => (
@@ -201,7 +201,7 @@ export function Pager({
       <button
         disabled={page <= 1}
         onClick={() => onPage(page - 1)}
-        className="rounded-md border border-border p-1.5 text-muted enabled:hover:bg-white/5 disabled:opacity-30"
+        className="rounded-md border border-border p-1.5 text-muted enabled:hover:bg-hover disabled:opacity-30"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
@@ -211,7 +211,7 @@ export function Pager({
       <button
         disabled={page >= totalPages}
         onClick={() => onPage(page + 1)}
-        className="rounded-md border border-border p-1.5 text-muted enabled:hover:bg-white/5 disabled:opacity-30"
+        className="rounded-md border border-border p-1.5 text-muted enabled:hover:bg-hover disabled:opacity-30"
       >
         <ChevronRight className="h-4 w-4" />
       </button>
@@ -240,12 +240,12 @@ export function Drawer({
       />
       <div className="absolute right-0 top-0 flex h-full w-full max-w-2xl flex-col border-l border-border bg-panel shadow-2xl">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <div className="min-w-0 pr-4 text-sm font-medium text-white">
+          <div className="min-w-0 pr-4 text-sm font-medium text-fg">
             {title}
           </div>
           <button
             onClick={onClose}
-            className="rounded-md p-1.5 text-muted hover:bg-white/5 hover:text-white"
+            className="rounded-md p-1.5 text-muted hover:bg-hover hover:text-fg"
           >
             <X className="h-4 w-4" />
           </button>
@@ -258,7 +258,7 @@ export function Drawer({
 
 export function JsonBlock({ value }: { value: unknown }) {
   return (
-    <pre className="overflow-x-auto rounded-lg border border-border bg-black/40 p-4 font-mono text-[12px] leading-relaxed text-muted">
+    <pre className="overflow-x-auto rounded-lg border border-border bg-inset p-4 font-mono text-[12px] leading-relaxed text-muted">
       {JSON.stringify(value, null, 2)}
     </pre>
   )
@@ -273,7 +273,7 @@ export function StatusPill({ status }: { status?: string }) {
         ? 'border-red-900/60 bg-red-950/30 text-red-300'
         : s.includes('run') || s.includes('progress') || s.includes('pending')
           ? 'border-amber-900/60 bg-amber-950/30 text-amber-300'
-          : 'border-border bg-black/30 text-muted'
+          : 'border-border bg-inset text-muted'
   return (
     <span
       className={cn(

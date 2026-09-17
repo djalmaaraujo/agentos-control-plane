@@ -42,7 +42,7 @@ export function ExportMenu({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-white/5 hover:text-white"
+        className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-hover hover:text-fg"
       >
         <Download className="h-3.5 w-3.5" />
         Export
@@ -55,7 +55,7 @@ export function ExportMenu({
                 onCsv()
                 setOpen(false)
               }}
-              className="block w-full rounded px-2 py-1.5 text-left text-[12px] text-muted hover:bg-white/5 hover:text-white"
+              className="block w-full rounded px-2 py-1.5 text-left text-[12px] text-muted hover:bg-hover hover:text-fg"
             >
               Export CSV
             </button>
@@ -66,7 +66,7 @@ export function ExportMenu({
                 onJson()
                 setOpen(false)
               }}
-              className="block w-full rounded px-2 py-1.5 text-left text-[12px] text-muted hover:bg-white/5 hover:text-white"
+              className="block w-full rounded px-2 py-1.5 text-left text-[12px] text-muted hover:bg-hover hover:text-fg"
             >
               Export JSON
             </button>
@@ -88,7 +88,7 @@ export function TimeRange({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value as TimeRangeKey)}
-      className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-white/5"
+      className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-hover"
     >
       {TIME_RANGES.map((r) => (
         <option key={r.key} value={r.key}>
@@ -114,7 +114,7 @@ export function PageEmpty({
   return (
     <div className="flex flex-col items-center justify-center px-8 py-24 text-center">
       {icon && <div className="mb-4">{icon}</div>}
-      <h2 className="text-lg font-semibold text-white">{title}</h2>
+      <h2 className="text-lg font-semibold text-fg">{title}</h2>
       {subtitle && <p className="mt-1 max-w-md text-sm text-muted">{subtitle}</p>}
       {action && <div className="mt-6">{action}</div>}
     </div>

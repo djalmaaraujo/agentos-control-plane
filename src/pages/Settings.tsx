@@ -1,11 +1,125 @@
 import { useState } from 'react'
-import { LogOut, Plus, Trash2 } from 'lucide-react'
+import { Check, Copy, KeyRound, Loader2, LogOut, Plus, Trash2 } from 'lucide-react'
 import { useOS } from '@/lib/osContext'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
 import { getAuthToken, setAuthToken } from '@/lib/client'
+import { generateRsaKeypair } from '@/lib/keys'
+import { getTheme, setTheme, type Theme } from '@/lib/theme'
 import { PageHeader } from '@/components/data'
 import { cn } from '@/lib/utils'
+
+function CopyBlock({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between">
+        <span className="label">{label}</span>
+        <button
+          onClick={() => {
+            navigator.clipboard?.writeText(value)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1200)
+          }}
+          className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
+        >
+          {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+          copy
+        </button>
+      </div>
+      <pre className="max-h-40 overflow-auto rounded-lg border border-border bg-inset p-3 font-mono text-[11px] leading-relaxed text-muted">
+        {value}
+      </pre>
+    </div>
+  )
+}
+
+function AuthPanel() {
+  const [keys, setKeys] = useState<{ publicKeyPem: string; privateKeyPem: string } | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const snippet = keys
+    ? `from agno.os import AgentOS
+from agno.os.config import AuthorizationConfig
+
+agent_os = AgentOS(
+    agents=[...],
+    authorization=True,
+    authorization_config=AuthorizationConfig(
+        verification_keys=["""${keys.publicKeyPem}"""],
+        algorithm="RS256",
+    ),
+)`
+    : ''
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[12px] leading-relaxed text-faint">
+        Generate an RS256 keypair to enable JWT auth. Put the public key in your
+        AgentOS <span className="font-mono">verification_keys</span> and set{' '}
+        <span className="font-mono">authorization=True</span>; sign tokens with the
+        private key. Both are generated in your browser and never sent anywhere.
+      </p>
+      <button
+        onClick={async () => {
+          setBusy(true)
+          try {
+            setKeys(await generateRsaKeypair())
+          } finally {
+            setBusy(false)
+          }
+        }}
+        className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-[12px] text-muted hover:bg-hover hover:text-fg"
+      >
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
+        Generate RS256 keypair
+      </button>
+      {keys && (
+        <div className="space-y-3">
+          <CopyBlock label="Public key (verification_keys)" value={keys.publicKeyPem} />
+          <CopyBlock label="Private key (sign tokens — keep secret)" value={keys.privateKeyPem} />
+          <CopyBlock label="AgentOS config" value={snippet} />
+        </div>
+      )}
+      <div className="border-t border-border-soft pt-3">
+        <div className="label mb-2">Supported auth modes</div>
+        <div className="space-y-1 text-[12px] text-faint">
+          <div><span className="font-mono text-muted">security_key</span> — shared bearer (OS_SECURITY_KEY)</div>
+          <div><span className="font-mono text-muted">jwt</span> — control-plane or self-hosted (RS256/ES256/HS256)</div>
+          <div><span className="font-mono text-muted">jwks_file</span> — third-party IDP (WorkOS, Auth0, Okta)</div>
+          <div><span className="font-mono text-muted">cookie</span> — JWTMiddleware token from a cookie</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ThemePanel() {
+  const [theme, setThemeState] = useState<Theme>(getTheme())
+  const pick = (t: Theme) => {
+    setTheme(t)
+    setThemeState(t)
+  }
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-[13px] text-faint">Theme</span>
+      <div className="flex gap-1 rounded-md border border-border p-0.5">
+        {(['dark', 'light'] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => pick(t)}
+            className={cn(
+              'rounded px-3 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors',
+              theme === t ? 'bg-accent text-black' : 'text-faint hover:text-fg'
+            )}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function InterfaceRow({ type, route }: { type: string; route: string }) {
   const { data } = useApi((s) => api.interfaceStatus(route, s), [route])
@@ -80,6 +194,10 @@ export function Settings() {
           />
         </Panel>
 
+        <Panel title="Appearance">
+          <ThemePanel />
+        </Panel>
+
         <Panel title="Access">
           <Row
             label="Control plane login"
@@ -101,12 +219,16 @@ export function Settings() {
           {authed && (
             <button
               onClick={logout}
-              className="mt-3 flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-[12px] text-muted hover:bg-white/5 hover:text-white"
+              className="mt-3 flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-[12px] text-muted hover:bg-hover hover:text-fg"
             >
               <LogOut className="h-3.5 w-3.5" />
               Log out
             </button>
           )}
+        </Panel>
+
+        <Panel title="Authorization (JWT)">
+          <AuthPanel />
         </Panel>
 
         <Panel title="Servers">
@@ -126,7 +248,7 @@ export function Settings() {
                       s.id === active.id ? 'bg-accent' : 'bg-faint'
                     )}
                   />
-                  <span className="text-[13px] text-white">{s.name}</span>
+                  <span className="text-[13px] text-fg">{s.name}</span>
                   <span className="font-mono text-[11px] text-faint">{s.apiBase}</span>
                 </button>
                 {s.removable && (
@@ -145,13 +267,13 @@ export function Settings() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Name"
-              className="w-40 rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-white outline-none focus:border-accent"
+              className="w-40 rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-fg outline-none focus:border-accent"
             />
             <input
               value={base}
               onChange={(e) => setBase(e.target.value)}
               placeholder="https://os.example.com or /api"
-              className="flex-1 rounded-md border border-border bg-panel px-3 py-1.5 font-mono text-[12px] text-white outline-none focus:border-accent"
+              className="flex-1 rounded-md border border-border bg-panel px-3 py-1.5 font-mono text-[12px] text-fg outline-none focus:border-accent"
             />
             <button
               onClick={() => {
@@ -194,7 +316,7 @@ export function Settings() {
               {config?.available_models?.map((m) => (
                 <span
                   key={m.id}
-                  className="rounded border border-border bg-black/30 px-2 py-1 font-mono text-[11px] text-muted"
+                  className="rounded border border-border bg-inset px-2 py-1 font-mono text-[11px] text-muted"
                 >
                   {m.id}
                   <span className="text-faint"> · {m.provider}</span>

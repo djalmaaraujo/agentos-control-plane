@@ -55,7 +55,7 @@ function Detail({ kind, id }: { kind: Kind; id: string }) {
             {data.members.map((m) => (
               <span
                 key={m.id}
-                className="rounded border border-border bg-black/30 px-2 py-1 text-[12px] text-muted"
+                className="rounded border border-border bg-inset px-2 py-1 text-[12px] text-muted"
               >
                 {m.name}
               </span>
@@ -73,7 +73,7 @@ function Detail({ kind, id }: { kind: Kind; id: string }) {
             {tools.map((t) => (
               <span
                 key={t.name}
-                className="rounded border border-border bg-black/30 px-2 py-1 font-mono text-[11px] text-muted"
+                className="rounded border border-border bg-inset px-2 py-1 font-mono text-[11px] text-muted"
                 title={t.requires_confirmation ? 'Requires approval' : undefined}
               >
                 {t.name}
@@ -89,7 +89,7 @@ function Detail({ kind, id }: { kind: Kind; id: string }) {
       {instructions && (
         <div>
           <div className="label mb-2">Instructions</div>
-          <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg border border-border bg-black/40 p-3 text-[12px] leading-relaxed text-muted">
+          <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg border border-border bg-inset p-3 text-[12px] leading-relaxed text-muted">
             {instructions}
           </pre>
         </div>

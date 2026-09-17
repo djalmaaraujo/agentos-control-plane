@@ -57,24 +57,54 @@ export function StudioEditor({
     onChanged()
   }
 
+  const publish = async () => {
+    if (!data?.version) return
+    setBusy(true)
+    try {
+      await api.publishConfig(component.component_id, data.version)
+      reload()
+      versions.reload()
+      onChanged()
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-border-soft px-8 py-4">
-        <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted hover:text-white">
+        <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted hover:text-fg">
           <ChevronLeft className="h-4 w-4" />
           {component.name || component.component_id}
           <span className="font-mono text-[10px] uppercase text-faint">
             {component.component_type}
           </span>
         </button>
-        <button
-          onClick={save}
-          disabled={busy || !draft}
-          className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-black hover:opacity-90 disabled:opacity-40"
-        >
-          {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-          Save as new version
-        </button>
+        <div className="flex items-center gap-2">
+          {data?.stage !== 'published' && (
+            <button
+              onClick={publish}
+              disabled={busy || !!draft}
+              title={draft ? 'Save first, then publish' : 'Publish current version'}
+              className="rounded-md border border-border px-3 py-1.5 text-[12px] text-muted hover:bg-hover hover:text-fg disabled:opacity-40"
+            >
+              Publish
+            </button>
+          )}
+          {data?.stage === 'published' && (
+            <span className="rounded border border-emerald-900/60 px-2 py-1 font-mono text-[10px] uppercase text-emerald-400">
+              published
+            </span>
+          )}
+          <button
+            onClick={save}
+            disabled={busy || !draft}
+            className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-black hover:opacity-90 disabled:opacity-40"
+          >
+            {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            Save as new version
+          </button>
+        </div>
       </div>
 
       {loading && !data ? (
@@ -142,7 +172,7 @@ export function StudioEditor({
                         className="flex items-center justify-between rounded-md border border-border-soft px-3 py-2"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-[12px] text-white">v{v.version}</span>
+                          <span className="font-mono text-[12px] text-fg">v{v.version}</span>
                           <span className="font-mono text-[10px] text-faint">
                             {formatDateTime(v.created_at)}
                           </span>
@@ -154,7 +184,7 @@ export function StudioEditor({
                         ) : (
                           <button
                             onClick={() => setCurrent(v.version)}
-                            className="font-mono text-[10px] uppercase tracking-wider text-faint hover:text-white"
+                            className="font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
                           >
                             Set current
                           </button>

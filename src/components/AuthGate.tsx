@@ -68,7 +68,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
               <Lock className="h-4 w-4" />
             </div>
             <div>
-              <div className="text-sm font-semibold text-white">Control Plane</div>
+              <div className="text-sm font-semibold text-fg">Control Plane</div>
               <div className="font-mono text-[10px] uppercase tracking-wider text-faint">
                 AgentOS
               </div>
@@ -80,7 +80,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+            className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
             placeholder="••••••••"
           />
           {error && <p className="mt-2 text-[12px] text-red-300">{error}</p>}

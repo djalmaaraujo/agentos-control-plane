@@ -41,7 +41,7 @@ function CopyField({ label, value }: { label: string; value?: string }) {
           setCopied(true)
           setTimeout(() => setCopied(false), 1200)
         }}
-        className="flex w-full items-center gap-2 rounded-md border border-border bg-panel px-3 py-2 text-left hover:bg-white/5"
+        className="flex w-full items-center gap-2 rounded-md border border-border bg-panel px-3 py-2 text-left hover:bg-hover"
       >
         <span className="truncate font-mono text-[12px] text-muted">
           {value || '—'}
@@ -95,8 +95,8 @@ function SpanTree({
             key={span.id}
             onClick={() => onSelect(span)}
             className={cn(
-              'flex w-full items-center gap-2 rounded-md py-2 pr-3 text-left transition-colors hover:bg-white/[0.04]',
-              selectedId === span.id && 'bg-white/[0.06]'
+              'flex w-full items-center gap-2 rounded-md py-2 pr-3 text-left transition-colors hover:bg-hover',
+              selectedId === span.id && 'bg-hoverstrong'
             )}
             style={{ paddingLeft: 8 + depth * 20 }}
           >
@@ -111,7 +111,7 @@ function SpanTree({
                     return n
                   })
                 }}
-                className="text-faint hover:text-white"
+                className="text-faint hover:text-fg"
               >
                 {collapsed.has(span.id) ? (
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -125,7 +125,7 @@ function SpanTree({
             <span className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-black', color)}>
               <Icon className="h-3.5 w-3.5" strokeWidth={2} />
             </span>
-            <span className="flex-1 truncate text-[13px] text-white">
+            <span className="flex-1 truncate text-[13px] text-fg">
               {span.name}
             </span>
             {typeof tokens === 'number' && (
@@ -175,8 +175,8 @@ function Timeline({
             key={span.id}
             onClick={() => onSelect(span)}
             className={cn(
-              'flex w-full items-center gap-3 py-1.5 pr-3 text-left transition-colors hover:bg-white/[0.04]',
-              selectedId === span.id && 'bg-white/[0.06]'
+              'flex w-full items-center gap-3 py-1.5 pr-3 text-left transition-colors hover:bg-hover',
+              selectedId === span.id && 'bg-hoverstrong'
             )}
           >
             <span
@@ -185,7 +185,7 @@ function Timeline({
             >
               {span.name}
             </span>
-            <span className="relative h-3.5 flex-1 rounded bg-black/30">
+            <span className="relative h-3.5 flex-1 rounded bg-inset">
               <span
                 className={cn('absolute top-0 h-3.5 rounded', color)}
                 style={{ left: `${left}%`, width: `${width}%` }}
@@ -219,18 +219,18 @@ function Payload({ value }: { value: unknown }) {
       <div className="mb-2 flex items-center justify-end gap-1 rounded-md border border-border p-0.5 text-[10px]">
         <button
           onClick={() => setFormatted(false)}
-          className={cn('rounded px-2 py-1 font-mono uppercase', !formatted ? 'bg-white/10 text-white' : 'text-faint')}
+          className={cn('rounded px-2 py-1 font-mono uppercase', !formatted ? 'bg-hoverstrong text-fg' : 'text-faint')}
         >
           Text
         </button>
         <button
           onClick={() => setFormatted(true)}
-          className={cn('rounded px-2 py-1 font-mono uppercase', formatted ? 'bg-white/10 text-white' : 'text-faint')}
+          className={cn('rounded px-2 py-1 font-mono uppercase', formatted ? 'bg-hoverstrong text-fg' : 'text-faint')}
         >
           Formatted
         </button>
       </div>
-      <pre className="max-h-[40vh] overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-black/40 p-3 font-mono text-[12px] leading-relaxed text-muted">
+      <pre className="max-h-[40vh] overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-inset p-3 font-mono text-[12px] leading-relaxed text-muted">
         {formatted ? pretty : asString}
       </pre>
     </div>
@@ -246,7 +246,7 @@ function SpanDetail({ span }: { span: TraceSpan }) {
         <span className={cn('flex h-7 w-7 items-center justify-center rounded-md text-black', color)}>
           <Icon className="h-4 w-4" strokeWidth={2} />
         </span>
-        <span className="flex-1 truncate font-semibold text-white">{span.name}</span>
+        <span className="flex-1 truncate font-semibold text-fg">{span.name}</span>
         <span className="font-mono text-[11px] uppercase tracking-wider text-faint">
           latency {dur(span.duration)}
         </span>
@@ -259,7 +259,7 @@ function SpanDetail({ span }: { span: TraceSpan }) {
             onClick={() => setTab(t)}
             className={cn(
               'border-b-2 py-3 font-mono text-[11px] uppercase tracking-wider',
-              tab === t ? 'border-accent text-white' : 'border-transparent text-faint hover:text-muted'
+              tab === t ? 'border-accent text-fg' : 'border-transparent text-faint hover:text-muted'
             )}
           >
             {t}
@@ -301,7 +301,7 @@ function Metadata({ meta }: { meta?: Record<string, unknown> }) {
       {Object.entries(meta).map(([k, v]) => (
         <div key={k}>
           <div className="label mb-1">{k.replace(/_/g, ' ')}</div>
-          <div className="rounded-lg border border-border bg-black/40 p-3 font-mono text-[12px] text-muted">
+          <div className="rounded-lg border border-border bg-inset p-3 font-mono text-[12px] text-muted">
             {typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)}
           </div>
         </div>
@@ -339,7 +339,7 @@ export function TraceDetail({
       <div className="flex items-center justify-between border-b border-border-soft px-8 py-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-sm text-muted hover:text-white"
+          className="flex items-center gap-2 text-sm text-muted hover:text-fg"
         >
           <ChevronLeft className="h-4 w-4" />
           {data?.name ?? 'Trace'}
@@ -389,7 +389,7 @@ export function TraceDetail({
                       onClick={() => setView(v)}
                       className={cn(
                         'rounded px-2 py-1 font-mono text-[10px] uppercase',
-                        view === v ? 'bg-white/10 text-white' : 'text-faint'
+                        view === v ? 'bg-hoverstrong text-fg' : 'text-faint'
                       )}
                     >
                       {v}

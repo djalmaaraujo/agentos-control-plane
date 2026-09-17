@@ -4,16 +4,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#0a0a0b',
-        panel: '#0f0f10',
-        card: '#131315',
-        'card-hover': '#17171a',
-        border: '#242427',
-        'border-soft': '#1c1c1f',
-        muted: '#8a8a92',
-        faint: '#5c5c63',
+        bg: 'var(--c-bg)',
+        panel: 'var(--c-panel)',
+        card: 'var(--c-card)',
+        'card-hover': 'var(--c-card-hover)',
+        border: 'var(--c-border)',
+        'border-soft': 'var(--c-border-soft)',
+        muted: 'var(--c-muted)',
+        faint: 'var(--c-faint)',
+        fg: 'var(--c-fg)',
+        inset: 'var(--c-inset)',
+        hover: 'var(--c-hover)',
+        hoverstrong: 'var(--c-hover-strong)',
         accent: '#ff5c33',
-        'accent-dim': 'rgba(255, 92, 51, 0.12)'
+        'accent-dim': 'var(--c-accent-dim)'
       },
       fontFamily: {
         sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],

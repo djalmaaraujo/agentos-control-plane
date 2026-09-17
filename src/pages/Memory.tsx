@@ -50,7 +50,7 @@ function MemoryForm({
           value={memory}
           onChange={(e) => setMemory(e.target.value)}
           rows={4}
-          className="w-full resize-y rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="w-full resize-y rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
         />
       </div>
       <div>
@@ -58,7 +58,7 @@ function MemoryForm({
         <input
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
-          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
         />
       </div>
       <div>
@@ -66,7 +66,7 @@ function MemoryForm({
         <input
           value={topics}
           onChange={(e) => setTopics(e.target.value)}
-          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
         />
       </div>
       {error && <p className="text-[12px] text-red-300">{error}</p>}
@@ -105,7 +105,7 @@ function DeleteCell({ id, onDone }: { id?: string; onDone: () => void }) {
         >
           <Check className="h-3.5 w-3.5" />
         </button>
-        <button onClick={() => setConfirm(false)} className="text-faint hover:text-white">
+        <button onClick={() => setConfirm(false)} className="text-faint hover:text-fg">
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
@@ -131,7 +131,7 @@ function Topics({ topics }: { topics?: string[] }) {
       {topics.map((t) => (
         <span
           key={t}
-          className="rounded border border-border bg-black/30 px-1.5 py-0.5 font-mono text-[10px] text-muted"
+          className="rounded border border-border bg-inset px-1.5 py-0.5 font-mono text-[10px] text-muted"
         >
           {t}
         </span>
@@ -172,12 +172,12 @@ export function Memory() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search memories…"
-              className="w-56 rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-white outline-none focus:border-accent"
+              className="w-56 rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-fg outline-none focus:border-accent"
             />
             <button
               onClick={optimize}
               disabled={optimizing}
-              className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-white/5 hover:text-white disabled:opacity-40"
+              className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-hover hover:text-fg disabled:opacity-40"
             >
               <Sparkles className={optimizing ? 'h-3.5 w-3.5 animate-pulse' : 'h-3.5 w-3.5'} />
               Optimize
@@ -208,7 +208,7 @@ export function Memory() {
               key: 'memory',
               header: 'Memory',
               render: (r) => (
-                <span className="text-white">{r.memory || '—'}</span>
+                <span className="text-fg">{r.memory || '—'}</span>
               )
             },
             {
@@ -280,13 +280,13 @@ export function Memory() {
           <div className="space-y-5">
             <button
               onClick={() => setEditing(true)}
-              className="rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-white/5 hover:text-white"
+              className="rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-hover hover:text-fg"
             >
               Edit
             </button>
             <div>
               <div className="label mb-1.5">Memory</div>
-              <div className="rounded-lg border border-border bg-black/30 px-3 py-2.5 text-[14px] text-white">
+              <div className="rounded-lg border border-border bg-inset px-3 py-2.5 text-[14px] text-fg">
                 {selected.memory || '—'}
               </div>
             </div>

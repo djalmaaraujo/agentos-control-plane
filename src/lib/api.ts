@@ -45,6 +45,11 @@ export const api = {
       { session_name: name }
     ),
   deleteSession: (id: string) => apiJson(`/sessions/${id}`, 'DELETE'),
+  forkSession: (type: 'agent' | 'team', componentId: string, sessionId: string) =>
+    apiJson<{ session_id?: string }>(
+      `/${type === 'team' ? 'teams' : 'agents'}/${componentId}/sessions/${sessionId}/fork`,
+      'POST'
+    ),
 
   traces: (q: Q, s?: AbortSignal) => apiGet<Paginated<Trace>>('/traces', q, s),
   trace: (id: string, s?: AbortSignal) =>
@@ -143,6 +148,8 @@ export const api = {
     apiJson(`/components/${id}/configs`, 'POST', { config, set_current: true }),
   setCurrentConfig: (id: string, version: number) =>
     apiJson(`/components/${id}/configs/${version}/set-current`, 'POST'),
+  publishConfig: (id: string, version: number) =>
+    apiJson(`/components/${id}/configs/${version}`, 'PATCH', { stage: 'published' }),
 
   migrateDatabase: (dbId: string) => apiJson(`/databases/${dbId}/migrate`, 'POST'),
   migrateAll: () => apiJson('/databases/all/migrate', 'POST'),

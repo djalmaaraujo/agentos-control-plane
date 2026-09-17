@@ -49,7 +49,7 @@ function Field({
 }
 
 function cnBox(mono?: boolean) {
-  return `rounded-lg border border-border bg-black/30 px-3 py-2.5 text-[13px] text-muted ${mono ? 'font-mono text-[12px] break-all' : ''}`
+  return `rounded-lg border border-border bg-inset px-3 py-2.5 text-[13px] text-muted ${mono ? 'font-mono text-[12px] break-all' : ''}`
 }
 
 export function Learning() {
@@ -85,7 +85,7 @@ export function Learning() {
               key: 'memory',
               header: 'Memory',
               render: (r) => (
-                <span className="line-clamp-2 text-white">
+                <span className="line-clamp-2 text-fg">
                   {firstMemory(r)?.content || '—'}
                 </span>
               )

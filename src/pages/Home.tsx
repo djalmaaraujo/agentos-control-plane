@@ -62,7 +62,7 @@ function ComponentSection({
       {collapsible && (
         <button
           onClick={() => setExpanded((e) => !e)}
-          className="mt-3 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-white/5 hover:text-white"
+          className="mt-3 rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-hover hover:text-fg"
         >
           {expanded ? 'Show less' : `Show more (+${items.length - COLLAPSE_AT})`}
         </button>
@@ -84,7 +84,7 @@ function InterfacesSection({ config }: { config: OSConfig }) {
             className="flex items-center justify-between p-4"
           >
             <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#242427] text-muted">
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-card-hover text-muted">
                 <MessageCircle className="h-4 w-4" strokeWidth={2} />
               </div>
               <span className="font-mono text-[11px] uppercase tracking-wider text-muted">

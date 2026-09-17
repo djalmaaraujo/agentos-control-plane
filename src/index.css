@@ -4,6 +4,36 @@
 
 :root {
   color-scheme: dark;
+  --c-bg: #0a0a0b;
+  --c-panel: #0f0f10;
+  --c-card: #131315;
+  --c-card-hover: #17171a;
+  --c-border: #242427;
+  --c-border-soft: #1c1c1f;
+  --c-muted: #8a8a92;
+  --c-faint: #5c5c63;
+  --c-fg: #ededef;
+  --c-inset: rgba(0, 0, 0, 0.35);
+  --c-hover: rgba(255, 255, 255, 0.05);
+  --c-hover-strong: rgba(255, 255, 255, 0.1);
+  --c-accent-dim: rgba(255, 92, 51, 0.12);
+}
+
+:root.light {
+  color-scheme: light;
+  --c-bg: #f6f6f7;
+  --c-panel: #ffffff;
+  --c-card: #ffffff;
+  --c-card-hover: #f1f1f3;
+  --c-border: #e3e3e7;
+  --c-border-soft: #ececef;
+  --c-muted: #55555c;
+  --c-faint: #8a8a92;
+  --c-fg: #17171a;
+  --c-inset: rgba(0, 0, 0, 0.04);
+  --c-hover: rgba(0, 0, 0, 0.04);
+  --c-hover-strong: rgba(0, 0, 0, 0.07);
+  --c-accent-dim: rgba(255, 92, 51, 0.12);
 }
 
 html,
@@ -14,8 +44,8 @@ body,
 
 body {
   margin: 0;
-  background: theme('colors.bg');
-  color: #ededef;
+  background: var(--c-bg);
+  color: var(--c-fg);
   font-family: theme('fontFamily.sans');
   -webkit-font-smoothing: antialiased;
 }
@@ -25,13 +55,13 @@ body {
   height: 10px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #2a2a2e;
+  background: var(--c-border);
   border-radius: 999px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #3a3a40;
+  background: var(--c-muted);
   background-clip: content-box;
 }
 
@@ -94,13 +124,13 @@ body {
 .md code {
   font-family: theme('fontFamily.mono');
   font-size: 0.88em;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--c-hover-strong);
   padding: 0.1em 0.35em;
   border-radius: 4px;
 }
 .md pre {
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid #242427;
+  background: var(--c-inset);
+  border: 1px solid var(--c-border);
   border-radius: 8px;
   padding: 0.8em 1em;
   overflow-x: auto;
@@ -111,9 +141,9 @@ body {
   font-size: 0.85em;
 }
 .md blockquote {
-  border-left: 3px solid #33333a;
+  border-left: 3px solid var(--c-border);
   padding-left: 1em;
-  color: #8a8a92;
+  color: var(--c-muted);
 }
 .md table {
   border-collapse: collapse;
@@ -122,15 +152,15 @@ body {
 }
 .md th,
 .md td {
-  border: 1px solid #242427;
+  border: 1px solid var(--c-border);
   padding: 0.4em 0.7em;
   text-align: left;
 }
 .md th {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--c-hover);
 }
 .md hr {
   border: 0;
-  border-top: 1px solid #242427;
+  border-top: 1px solid var(--c-border);
   margin: 1em 0;
 }

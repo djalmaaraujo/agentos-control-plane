@@ -31,7 +31,7 @@ function Chips({
       ? 'border-emerald-900/60 bg-emerald-950/30 text-emerald-300'
       : tone === 'bad'
         ? 'border-red-900/60 bg-red-950/30 text-red-300'
-        : 'border-border bg-black/30 text-muted'
+        : 'border-border bg-inset text-muted'
   return (
     <div>
       <div className="label mb-1.5">
@@ -98,7 +98,7 @@ function EvalDetail({ run }: { run: EvalRun }) {
           <div className="space-y-3">
             <div className="label">Results {results.length > 0 && <span className="text-faint">{results.length}</span>}</div>
             {results.map((r, i) => (
-              <div key={i} className="rounded-lg border border-border bg-black/30 p-3">
+              <div key={i} className="rounded-lg border border-border bg-inset p-3">
                 <div className="mb-2 flex items-center gap-2">
                   <span
                     className={cn(
@@ -114,7 +114,7 @@ function EvalDetail({ run }: { run: EvalRun }) {
                     <span className="font-mono text-[11px] text-faint">score {r.score}</span>
                   )}
                 </div>
-                {r.input && <p className="mb-1 text-[13px] text-white">{r.input}</p>}
+                {r.input && <p className="mb-1 text-[13px] text-fg">{r.input}</p>}
                 {r.output && <p className="mb-1 text-[12px] text-muted">{r.output}</p>}
                 {r.reason && <p className="text-[12px] italic text-faint">{r.reason}</p>}
               </div>
@@ -159,7 +159,7 @@ export function Evaluations() {
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-white/5"
+            className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-hover"
           >
             <option value="">All types</option>
             <option value="reliability">Reliability</option>
@@ -184,7 +184,7 @@ export function Evaluations() {
               key: 'name',
               header: 'Name',
               render: (r) => (
-                <span className="text-white">
+                <span className="text-fg">
                   {r.name || r.evaluated_component_name || r.id}
                 </span>
               )

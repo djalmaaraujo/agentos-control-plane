@@ -64,7 +64,7 @@ function CreateForm({
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
         />
       </div>
       <ComponentForm type={type} config={config} onChange={setConfig} options={options} />
@@ -111,14 +111,14 @@ function StudioCard({
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-black">
             <Icon className="h-4 w-4" strokeWidth={2} />
           </span>
-          <span className="font-medium text-white">
+          <span className="font-medium text-fg">
             {component.name || component.component_id}
           </span>
         </div>
         <div className="relative" ref={ref}>
           <button
             onClick={() => setMenu((m) => !m)}
-            className="rounded p-1 text-faint hover:bg-white/5 hover:text-white"
+            className="rounded p-1 text-faint hover:bg-hover hover:text-fg"
           >
             <MoreVertical className="h-4 w-4" />
           </button>

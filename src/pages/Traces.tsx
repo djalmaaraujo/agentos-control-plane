@@ -64,7 +64,7 @@ export function Traces() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Filter…"
-              className="w-56 rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-white outline-none focus:border-accent"
+              className="w-56 rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-fg outline-none focus:border-accent"
             />
             <TimeRange value={range} onChange={setRange} />
             <ExportMenu
@@ -90,7 +90,7 @@ export function Traces() {
             onClick={() => setTab(t)}
             className={cn(
               'border-b-2 py-2.5 font-mono text-[11px] uppercase tracking-wider',
-              tab === t ? 'border-accent text-white' : 'border-transparent text-faint hover:text-muted'
+              tab === t ? 'border-accent text-fg' : 'border-transparent text-faint hover:text-muted'
             )}
           >
             {t}
@@ -99,7 +99,7 @@ export function Traces() {
         {sessionId && (
           <button
             onClick={() => setSessionId(null)}
-            className="ml-auto flex items-center gap-1.5 self-center rounded border border-border px-2 py-1 font-mono text-[10px] text-muted hover:text-white"
+            className="ml-auto flex items-center gap-1.5 self-center rounded border border-border px-2 py-1 font-mono text-[10px] text-muted hover:text-fg"
           >
             session: {sessionId.slice(0, 14)}… <X className="h-3 w-3" />
           </button>
@@ -116,7 +116,7 @@ export function Traces() {
                   header: 'Trace',
                   render: (r) => (
                     <div className="min-w-0">
-                      <div className="truncate text-white">{r.name || r.trace_id}</div>
+                      <div className="truncate text-fg">{r.name || r.trace_id}</div>
                       {r.input && (
                         <div className="max-w-md truncate text-[11px] text-faint">{r.input}</div>
                       )}
@@ -178,7 +178,7 @@ export function Traces() {
                   key: 'session_id',
                   header: 'Session ID',
                   render: (r) => (
-                    <span className="font-mono text-[12px] text-white">{r.session_id}</span>
+                    <span className="font-mono text-[12px] text-fg">{r.session_id}</span>
                   )
                 },
                 { key: 'user_id', header: 'User', render: (r) => r.user_id || '—' },

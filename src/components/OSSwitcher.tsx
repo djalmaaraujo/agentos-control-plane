@@ -26,10 +26,10 @@ export function OSSwitcher() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-white/5"
+        className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-hover"
       >
         <Globe className="h-4 w-4 text-muted" strokeWidth={1.75} />
-        <span className="text-sm font-medium text-white">{label}</span>
+        <span className="text-sm font-medium text-fg">{label}</span>
         <span
           className={cn(
             'h-2 w-2 rounded-full',
@@ -47,7 +47,7 @@ export function OSSwitcher() {
           {servers.map((s) => (
             <div
               key={s.id}
-              className="group flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-white/5"
+              className="group flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-hover"
             >
               <button
                 onClick={() => {
@@ -62,7 +62,7 @@ export function OSSwitcher() {
                     s.id === active.id ? 'text-accent' : 'text-transparent'
                   )}
                 />
-                <span className="truncate text-[13px] text-white">{s.name}</span>
+                <span className="truncate text-[13px] text-fg">{s.name}</span>
                 <span className="truncate font-mono text-[10px] text-faint">
                   {s.apiBase}
                 </span>
@@ -86,13 +86,13 @@ export function OSSwitcher() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Name"
-                className="w-full rounded border border-border bg-black/40 px-2 py-1.5 text-[13px] text-white outline-none focus:border-accent"
+                className="w-full rounded border border-border bg-inset px-2 py-1.5 text-[13px] text-fg outline-none focus:border-accent"
               />
               <input
                 value={base}
                 onChange={(e) => setBase(e.target.value)}
                 placeholder="https://os.example.com or /api"
-                className="w-full rounded border border-border bg-black/40 px-2 py-1.5 font-mono text-[12px] text-white outline-none focus:border-accent"
+                className="w-full rounded border border-border bg-inset px-2 py-1.5 font-mono text-[12px] text-fg outline-none focus:border-accent"
               />
               <div className="flex gap-1.5">
                 <button
@@ -110,7 +110,7 @@ export function OSSwitcher() {
                 </button>
                 <button
                   onClick={() => setAdding(false)}
-                  className="rounded border border-border px-2 py-1.5 text-[12px] text-muted hover:bg-white/5"
+                  className="rounded border border-border px-2 py-1.5 text-[12px] text-muted hover:bg-hover"
                 >
                   Cancel
                 </button>
@@ -119,7 +119,7 @@ export function OSSwitcher() {
           ) : (
             <button
               onClick={() => setAdding(true)}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-muted hover:bg-white/5 hover:text-white"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-muted hover:bg-hover hover:text-fg"
             >
               <Plus className="h-3.5 w-3.5" />
               Add server

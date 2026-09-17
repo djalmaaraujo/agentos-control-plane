@@ -27,7 +27,7 @@ export function ToolCallView({ call }: { call: ChatToolCall }) {
   const [open, setOpen] = useState(false)
   const hasArgs = !!call.args && Object.keys(call.args as object).length > 0
   return (
-    <div className="rounded-lg border border-border bg-black/30">
+    <div className="rounded-lg border border-border bg-inset">
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center gap-2 px-3 py-2 text-left"
@@ -36,7 +36,7 @@ export function ToolCallView({ call }: { call: ChatToolCall }) {
           className={cn('h-3.5 w-3.5 text-faint transition-transform', open && 'rotate-90')}
         />
         <Wrench className="h-3.5 w-3.5 text-sky-400" />
-        <span className="flex-1 truncate font-mono text-[12px] text-white">
+        <span className="flex-1 truncate font-mono text-[12px] text-fg">
           {call.name}
         </span>
         {!call.done ? (
@@ -52,7 +52,7 @@ export function ToolCallView({ call }: { call: ChatToolCall }) {
           {hasArgs && (
             <div>
               <div className="label mb-1">Arguments</div>
-              <pre className="overflow-x-auto rounded border border-border bg-black/40 p-2 font-mono text-[11px] text-muted">
+              <pre className="overflow-x-auto rounded border border-border bg-inset p-2 font-mono text-[11px] text-muted">
                 {pretty(call.args)}
               </pre>
             </div>
@@ -60,7 +60,7 @@ export function ToolCallView({ call }: { call: ChatToolCall }) {
           {call.result && (
             <div>
               <div className="label mb-1">Result</div>
-              <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded border border-border bg-black/40 p-2 font-mono text-[11px] text-muted">
+              <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded border border-border bg-inset p-2 font-mono text-[11px] text-muted">
                 {pretty(call.result)}
               </pre>
             </div>
