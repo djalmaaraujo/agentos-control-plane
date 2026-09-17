@@ -1,10 +1,16 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Bot, Check, Loader2, Plus, Users, Workflow } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
 import { useApi } from '@/lib/useApi'
+import { useOS } from '@/lib/osContext'
 import { formatDateTime } from '@/lib/format'
-import type { Component, ComponentConfig, ComponentType } from '@/lib/types'
+import type {
+  Component,
+  ComponentConfig,
+  ComponentType,
+  RegistryItem
+} from '@/lib/types'
 import {
   PageHeader,
   DataTable,
@@ -12,17 +18,10 @@ import {
   Drawer,
   ConfirmDelete
 } from '@/components/data'
-import { JsonEditor } from '@/components/JsonEditor'
+import { ComponentForm, type FormOptions } from '@/components/ComponentForm'
 import { Spinner } from '@/components/ui'
-import { isValidJson } from '@/lib/utils'
 
 const TYPE_ICON = { agent: Bot, team: Users, workflow: Workflow }
-
-const STARTER: Record<ComponentType, string> = {
-  agent: JSON.stringify({ model: { id: '' }, instructions: '' }, null, 2),
-  team: JSON.stringify({ model: { id: '' }, members: [], instructions: '' }, null, 2),
-  workflow: JSON.stringify({ steps: [] }, null, 2)
-}
 
 function TypeBadge({ type }: { type: ComponentType }) {
   const Icon = TYPE_ICON[type]
@@ -34,24 +33,48 @@ function TypeBadge({ type }: { type: ComponentType }) {
   )
 }
 
-function CreateForm({ onCreated }: { onCreated: () => void }) {
+function useFormOptions(): FormOptions {
+  const { config } = useOS()
+  const reg = useApi(
+    (s) => api.registry({ limit: 200 }, s),
+    []
+  )
+  return useMemo(
+    () => ({
+      models: config?.available_models ?? [],
+      tools: (reg.data?.data ?? [])
+        .filter((r: RegistryItem) => r.type === 'tool' || r.type === 'function')
+        .map((r: RegistryItem) => r.name),
+      agents: (config?.agents ?? []).map((a) => ({ id: a.id, name: a.name }))
+    }),
+    [config, reg.data]
+  )
+}
+
+function CreateForm({
+  options,
+  onCreated
+}: {
+  options: FormOptions
+  onCreated: () => void
+}) {
   const [name, setName] = useState('')
   const [type, setType] = useState<ComponentType>('agent')
-  const [description, setDescription] = useState('')
-  const [config, setConfig] = useState(STARTER.agent)
+  const [config, setConfig] = useState<Record<string, unknown>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const create = async () => {
-    if (!name.trim() || !isValidJson(config)) return
+    if (!name.trim()) return
     setBusy(true)
     setError(null)
     try {
       await api.createComponent({
         name: name.trim(),
         component_type: type,
-        description: description.trim() || undefined,
-        config: JSON.parse(config),
+        description:
+          typeof config.description === 'string' ? config.description : undefined,
+        config,
         set_current: true
       })
       onCreated()
@@ -78,9 +101,8 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
         <select
           value={type}
           onChange={(e) => {
-            const t = e.target.value as ComponentType
-            setType(t)
-            setConfig(STARTER[t])
+            setType(e.target.value as ComponentType)
+            setConfig({})
           }}
           className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-muted outline-none"
         >
@@ -89,22 +111,13 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
           <option value="workflow">Workflow</option>
         </select>
       </div>
-      <div>
-        <div className="label mb-1.5">Description</div>
-        <input
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
-        />
-      </div>
-      <div>
-        <div className="label mb-1.5">Config (JSON)</div>
-        <JsonEditor value={config} onChange={setConfig} />
-      </div>
+
+      <ComponentForm type={type} config={config} onChange={setConfig} options={options} />
+
       {error && <p className="text-[12px] text-red-300">{error}</p>}
       <button
         onClick={create}
-        disabled={busy || !name.trim() || !isValidJson(config)}
+        disabled={busy || !name.trim()}
         className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-40"
       >
         {busy && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -114,7 +127,15 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
   )
 }
 
-function EditForm({ component, onChanged }: { component: Component; onChanged: () => void }) {
+function EditForm({
+  component,
+  options,
+  onChanged
+}: {
+  component: Component
+  options: FormOptions
+  onChanged: () => void
+}) {
   const { data, loading, reload } = useApi<ComponentConfig>(
     (s) => api.componentCurrentConfig(component.component_id, s),
     [component.component_id]
@@ -123,18 +144,16 @@ function EditForm({ component, onChanged }: { component: Component; onChanged: (
     (s) => api.componentConfigs(component.component_id, s),
     [component.component_id]
   )
-  const [config, setConfig] = useState<string | null>(null)
+  const [draft, setDraft] = useState<Record<string, unknown> | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const text =
-    config ?? (data ? JSON.stringify(data.config, null, 2) : '')
+  const config = draft ?? data?.config ?? {}
 
   const save = async () => {
-    if (!isValidJson(text)) return
     setBusy(true)
     try {
-      await api.saveComponentConfig(component.component_id, JSON.parse(text))
-      setConfig(null)
+      await api.saveComponentConfig(component.component_id, config)
+      setDraft(null)
       reload()
       versions.reload()
       onChanged()
@@ -145,6 +164,7 @@ function EditForm({ component, onChanged }: { component: Component; onChanged: (
 
   const setCurrent = async (version: number) => {
     await api.setCurrentConfig(component.component_id, version)
+    setDraft(null)
     reload()
     versions.reload()
     onChanged()
@@ -154,34 +174,27 @@ function EditForm({ component, onChanged }: { component: Component; onChanged: (
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <div className="label mb-1">Type</div>
-          <TypeBadge type={component.component_type} />
+      <div className="flex items-center justify-between">
+        <div className="font-mono text-[12px] text-muted">
+          v{data?.version ?? component.current_version ?? '—'}{' '}
+          {data?.stage && <span className="text-faint">· {data.stage}</span>}
         </div>
-        <div>
-          <div className="label mb-1">Current version</div>
-          <div className="font-mono text-[13px] text-muted">
-            v{data?.version ?? component.current_version ?? '—'}{' '}
-            {data?.stage && <span className="text-faint">· {data.stage}</span>}
-          </div>
-        </div>
+        <button
+          onClick={save}
+          disabled={busy || !draft}
+          className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-black hover:opacity-90 disabled:opacity-40"
+        >
+          {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          Save as new version
+        </button>
       </div>
 
-      <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <span className="label">Config (JSON)</span>
-          <button
-            onClick={save}
-            disabled={busy || !isValidJson(text)}
-            className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-black hover:opacity-90 disabled:opacity-40"
-          >
-            {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            Save as new version
-          </button>
-        </div>
-        <JsonEditor value={text} onChange={setConfig} />
-      </div>
+      <ComponentForm
+        type={component.component_type}
+        config={config}
+        onChange={setDraft}
+        options={options}
+      />
 
       <div>
         <div className="label mb-2">Versions</div>
@@ -226,6 +239,7 @@ function EditForm({ component, onChanged }: { component: Component; onChanged: (
 }
 
 export function Studio() {
+  const options = useFormOptions()
   const [creating, setCreating] = useState(false)
   const [selected, setSelected] = useState<Component | null>(null)
   const { rows, meta, loading, error, page, setPage, reload } =
@@ -257,9 +271,7 @@ export function Studio() {
             {
               key: 'name',
               header: 'Name',
-              render: (r) => (
-                <span className="text-white">{r.name || r.component_id}</span>
-              )
+              render: (r) => <span className="text-white">{r.name || r.component_id}</span>
             },
             {
               key: 'type',
@@ -310,6 +322,7 @@ export function Studio() {
 
       <Drawer open={creating} title="New component" onClose={() => setCreating(false)}>
         <CreateForm
+          options={options}
           onCreated={() => {
             setCreating(false)
             reload()
@@ -331,7 +344,9 @@ export function Studio() {
         }
         onClose={() => setSelected(null)}
       >
-        {selected && <EditForm component={selected} onChanged={reload} />}
+        {selected && (
+          <EditForm component={selected} options={options} onChanged={reload} />
+        )}
       </Drawer>
     </div>
   )
