@@ -12,6 +12,7 @@ import {
   Square,
   Trash2,
   Users,
+  Workflow,
   X
 } from 'lucide-react'
 import { useOS } from '@/lib/osContext'
@@ -27,11 +28,20 @@ import { Drawer } from '@/components/data'
 import { formatDateTime } from '@/lib/format'
 import { Spinner } from '@/components/ui'
 
+type Kind = 'agent' | 'team' | 'workflow'
+
+interface WorkflowStep {
+  name: string
+  done: boolean
+  content?: string
+}
+
 interface ChatMsg {
   role: 'user' | 'assistant'
   content: string
   reasoning?: string
   tools?: ChatToolCall[]
+  steps?: WorkflowStep[]
 }
 
 function Reasoning({ text }: { text: string }) {
@@ -57,6 +67,32 @@ function Reasoning({ text }: { text: string }) {
   )
 }
 
+function StepView({ step }: { step: WorkflowStep }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="rounded-lg border border-border bg-black/30">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-2 px-3 py-2 text-left"
+      >
+        <ChevronRight className={cn('h-3.5 w-3.5 text-faint transition-transform', open && 'rotate-90')} />
+        <Workflow className="h-3.5 w-3.5 text-accent" />
+        <span className="flex-1 truncate font-mono text-[12px] text-white">{step.name}</span>
+        {step.done ? (
+          <Check className="h-3.5 w-3.5 text-emerald-400" />
+        ) : (
+          <Spinner className="h-3.5 w-3.5 text-amber-400" />
+        )}
+      </button>
+      {open && step.content && (
+        <div className="border-t border-border px-3 py-2.5">
+          <Markdown>{step.content}</Markdown>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function SessionRow({
   sess,
   type,
@@ -64,7 +100,7 @@ function SessionRow({
   onChanged
 }: {
   sess: Session
-  type: 'agent' | 'team'
+  type: Kind
   onPick: (id: string) => void
   onChanged: () => void
 }) {
@@ -157,7 +193,7 @@ function SessionsPanel({
 }: {
   open: boolean
   onClose: () => void
-  type: 'agent' | 'team'
+  type: Kind
   componentId: string
   componentName: string
   onPick: (id: string) => void
@@ -208,7 +244,7 @@ function SessionsPanel({
 export function Chat() {
   const { config } = useOS()
   const [params, setParams] = useSearchParams()
-  const type = (params.get('type') as 'agent' | 'team') || 'agent'
+  const type = (params.get('type') as Kind) || 'agent'
   const id = params.get('id') || ''
 
   const [messages, setMessages] = useState<ChatMsg[]>([])
@@ -220,7 +256,12 @@ export function Chat() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
-  const list: ComponentRef[] = (type === 'team' ? config?.teams : config?.agents) ?? []
+  const list: ComponentRef[] =
+    (type === 'team'
+      ? config?.teams
+      : type === 'workflow'
+        ? config?.workflows
+        : config?.agents) ?? []
   const current = list.find((c) => c.id === id) ?? list[0]
   const manifest = current ? config?.manifest?.[current.id] : undefined
 
@@ -239,8 +280,10 @@ export function Chat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
   }, [messages])
 
-  const setType = (t: 'agent' | 'team') => {
-    const first = (t === 'team' ? config?.teams : config?.agents)?.[0]
+  const setType = (t: Kind) => {
+    const first = (
+      t === 'team' ? config?.teams : t === 'workflow' ? config?.workflows : config?.agents
+    )?.[0]
     setParams({ type: t, id: first?.id ?? '' })
   }
 
@@ -280,13 +323,39 @@ export function Chat() {
     form.set('stream', 'true')
     if (sessionId.current) form.set('session_id', sessionId.current)
 
-    const path = `/${type === 'team' ? 'teams' : 'agents'}/${current.id}/runs`
+    const base =
+      type === 'team' ? 'teams' : type === 'workflow' ? 'workflows' : 'agents'
+    const path = `/${base}/${current.id}/runs`
     try {
       for await (const ev of streamRun(path, form, controller.signal)) {
         if (typeof ev.session_id === 'string') sessionId.current = ev.session_id
         const name = typeof ev.event === 'string' ? ev.event : ''
 
-        if (name.endsWith('ToolCallStarted')) {
+        if (name === 'StepStarted') {
+          const stepName = String(ev.step_name ?? 'step')
+          patchLast((m) => ({
+            ...m,
+            steps: [...(m.steps ?? []), { name: stepName, done: false }]
+          }))
+        } else if (name === 'StepCompleted') {
+          const stepName = String(ev.step_name ?? '')
+          const content = typeof ev.content === 'string' ? ev.content : undefined
+          patchLast((m) => ({
+            ...m,
+            steps: (m.steps ?? []).map((st, i, arr) =>
+              st.name === stepName && i === arr.length - 1
+                ? { ...st, done: true, content }
+                : st.name === stepName && !st.done
+                  ? { ...st, done: true, content }
+                  : st
+            )
+          }))
+        } else if (name === 'WorkflowCompleted') {
+          if (typeof ev.content === 'string') {
+            const c = ev.content
+            patchLast((m) => ({ ...m, content: c }))
+          }
+        } else if (name.endsWith('ToolCallStarted')) {
           const t = ev.tool as Record<string, unknown> | undefined
           if (t) {
             patchLast((m) => ({
@@ -349,11 +418,12 @@ export function Chat() {
       <div className="flex items-center gap-2">
         <select
           value={type}
-          onChange={(e) => setType(e.target.value as 'agent' | 'team')}
+          onChange={(e) => setType(e.target.value as Kind)}
           className="rounded-md border border-border bg-panel px-2.5 py-1.5 text-[12px] text-muted outline-none hover:bg-white/5"
         >
           <option value="agent">Agents</option>
           <option value="team">Teams</option>
+          <option value="workflow">Workflows</option>
         </select>
         <select
           value={current?.id ?? ''}
@@ -436,6 +506,9 @@ export function Chat() {
                   <div key={i} className="flex justify-start">
                     <div className="w-full max-w-[92%] space-y-2">
                       {m.reasoning && <Reasoning text={m.reasoning} />}
+                      {m.steps?.map((st, si) => (
+                        <StepView key={si} step={st} />
+                      ))}
                       {m.tools?.map((t) => (
                         <ToolCallView key={t.id} call={t} />
                       ))}
@@ -444,7 +517,8 @@ export function Chat() {
                           <Markdown>{m.content}</Markdown>
                         </div>
                       ) : (
-                        !m.tools?.length && (
+                        !m.tools?.length &&
+                        !m.steps?.length && (
                           <div className="inline-flex gap-1 rounded-2xl border border-border bg-card px-4 py-3 text-faint">
                             <Dot /> <Dot /> <Dot />
                           </div>

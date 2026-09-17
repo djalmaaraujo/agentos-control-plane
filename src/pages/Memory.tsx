@@ -1,11 +1,85 @@
 import { useState } from 'react'
-import { Sparkles, Trash2, Check, X } from 'lucide-react'
+import { Loader2, Plus, Sparkles, Trash2, Check, X } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
 import { useOS } from '@/lib/osContext'
 import { formatDateTime } from '@/lib/format'
 import type { Memory as MemoryRow } from '@/lib/types'
 import { PageHeader, DataTable, Pager, Drawer, PrimitiveTag } from '@/components/data'
+
+function MemoryForm({
+  existing,
+  onSaved
+}: {
+  existing?: MemoryRow
+  onSaved: () => void
+}) {
+  const [memory, setMemory] = useState(existing?.memory ?? '')
+  const [userId, setUserId] = useState(existing?.user_id ?? '')
+  const [topics, setTopics] = useState((existing?.topics ?? []).join(', '))
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const save = async () => {
+    if (!memory.trim()) return
+    setBusy(true)
+    setError(null)
+    const body = {
+      memory: memory.trim(),
+      user_id: userId.trim() || undefined,
+      topics: topics.trim() ? topics.split(',').map((t) => t.trim()).filter(Boolean) : undefined
+    }
+    try {
+      if (existing?.memory_id) await api.updateMemory(existing.memory_id, body)
+      else await api.createMemory(body)
+      onSaved()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="label mb-1.5">Memory</div>
+        <textarea
+          autoFocus
+          value={memory}
+          onChange={(e) => setMemory(e.target.value)}
+          rows={4}
+          className="w-full resize-y rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+        />
+      </div>
+      <div>
+        <div className="label mb-1.5">User ID</div>
+        <input
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+        />
+      </div>
+      <div>
+        <div className="label mb-1.5">Topics (comma-separated)</div>
+        <input
+          value={topics}
+          onChange={(e) => setTopics(e.target.value)}
+          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+        />
+      </div>
+      {error && <p className="text-[12px] text-red-300">{error}</p>}
+      <button
+        onClick={save}
+        disabled={busy || !memory.trim()}
+        className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-40"
+      >
+        {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+        {existing ? 'Save changes' : 'Create memory'}
+      </button>
+    </div>
+  )
+}
 
 function DeleteCell({ id, onDone }: { id?: string; onDone: () => void }) {
   const [confirm, setConfirm] = useState(false)
@@ -69,6 +143,8 @@ export function Memory() {
   const { config } = useOS()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<MemoryRow | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [optimizing, setOptimizing] = useState(false)
   const { rows, meta, loading, error, page, setPage, reload } = usePaginatedList<MemoryRow>(
     (params, s) => api.memories(params, s),
@@ -104,6 +180,13 @@ export function Memory() {
             >
               <Sparkles className={optimizing ? 'h-3.5 w-3.5 animate-pulse' : 'h-3.5 w-3.5'} />
               Optimize
+            </button>
+            <button
+              onClick={() => setCreating(true)}
+              className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-black hover:opacity-90"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              New
             </button>
           </div>
         }
@@ -172,9 +255,41 @@ export function Memory() {
         <Pager page={page} totalPages={meta?.total_pages ?? 1} onPage={setPage} />
       </div>
 
-      <Drawer open={!!selected} title="Memory" onClose={() => setSelected(null)}>
-        {selected && (
+      <Drawer open={creating} title="New memory" onClose={() => setCreating(false)}>
+        <MemoryForm
+          onSaved={() => {
+            setCreating(false)
+            reload()
+          }}
+        />
+      </Drawer>
+
+      <Drawer
+        open={!!selected}
+        title="Memory"
+        onClose={() => {
+          setSelected(null)
+          setEditing(false)
+        }}
+      >
+        {selected && editing && (
+          <MemoryForm
+            existing={selected}
+            onSaved={() => {
+              setEditing(false)
+              setSelected(null)
+              reload()
+            }}
+          />
+        )}
+        {selected && !editing && (
           <div className="space-y-5">
+            <button
+              onClick={() => setEditing(true)}
+              className="rounded-md border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-muted hover:bg-white/5 hover:text-white"
+            >
+              Edit
+            </button>
             <div>
               <div className="label mb-1.5">Memory</div>
               <div className="rounded-lg border border-border bg-black/30 px-3 py-2.5 text-[14px] text-white">

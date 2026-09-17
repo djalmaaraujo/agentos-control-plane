@@ -1,13 +1,136 @@
 import { useState } from 'react'
-import { Play, Power } from 'lucide-react'
+import { Loader2, Play, Plus, Power } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
 import { useApi } from '@/lib/useApi'
+import { useOS } from '@/lib/osContext'
 import { formatDateTime } from '@/lib/format'
 import type { Schedule, ScheduleRun } from '@/lib/types'
 import { PageHeader, DataTable, Pager, Drawer, StatusPill } from '@/components/data'
 import { Spinner } from '@/components/ui'
 import { cn } from '@/lib/utils'
+
+function ScheduleForm({ onSaved }: { onSaved: () => void }) {
+  const { config } = useOS()
+  const [name, setName] = useState('')
+  const [kind, setKind] = useState<'agent' | 'team' | 'workflow'>('agent')
+  const [targetId, setTargetId] = useState('')
+  const [message, setMessage] = useState('')
+  const [cron, setCron] = useState('0 9 * * *')
+  const [tz, setTz] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  )
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const list =
+    (kind === 'team' ? config?.teams : kind === 'workflow' ? config?.workflows : config?.agents) ??
+    []
+  const base = kind === 'team' ? 'teams' : kind === 'workflow' ? 'workflows' : 'agents'
+  const id = targetId || list[0]?.id
+
+  const save = async () => {
+    if (!name.trim() || !id || !cron.trim()) return
+    setBusy(true)
+    setError(null)
+    try {
+      await api.createSchedule({
+        name: name.trim(),
+        cron_expr: cron.trim(),
+        endpoint: `/${base}/${id}/runs`,
+        method: 'POST',
+        payload: { message },
+        timezone: tz
+      })
+      onSaved()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="label mb-1.5">Name</div>
+        <input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="label mb-1.5">Target type</div>
+          <select
+            value={kind}
+            onChange={(e) => {
+              setKind(e.target.value as 'agent' | 'team' | 'workflow')
+              setTargetId('')
+            }}
+            className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-muted outline-none"
+          >
+            <option value="agent">Agent</option>
+            <option value="team">Team</option>
+            <option value="workflow">Workflow</option>
+          </select>
+        </div>
+        <div>
+          <div className="label mb-1.5">Target</div>
+          <select
+            value={id}
+            onChange={(e) => setTargetId(e.target.value)}
+            className="w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none"
+          >
+            {list.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div>
+        <div className="label mb-1.5">Message</div>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={3}
+          className="w-full resize-y rounded-md border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="label mb-1.5">Cron</div>
+          <input
+            value={cron}
+            onChange={(e) => setCron(e.target.value)}
+            className="w-full rounded-md border border-border bg-panel px-3 py-2 font-mono text-sm text-white outline-none focus:border-accent"
+          />
+        </div>
+        <div>
+          <div className="label mb-1.5">Timezone</div>
+          <input
+            value={tz}
+            onChange={(e) => setTz(e.target.value)}
+            className="w-full rounded-md border border-border bg-panel px-3 py-2 font-mono text-sm text-white outline-none focus:border-accent"
+          />
+        </div>
+      </div>
+      {error && <p className="text-[12px] text-red-300">{error}</p>}
+      <button
+        onClick={save}
+        disabled={busy || !name.trim() || !id}
+        className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-40"
+      >
+        {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+        Create schedule
+      </button>
+    </div>
+  )
+}
 
 function Field({ label, value }: { label: string; value?: React.ReactNode }) {
   return (
@@ -80,6 +203,7 @@ function ScheduleDetail({ schedule }: { schedule: Schedule }) {
 
 export function Scheduler() {
   const [selected, setSelected] = useState<Schedule | null>(null)
+  const [creating, setCreating] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const { rows, meta, loading, error, page, setPage, reload } =
     usePaginatedList<Schedule>((params, s) => api.schedules(params, s), {
@@ -98,7 +222,18 @@ export function Scheduler() {
 
   return (
     <div>
-      <PageHeader title="Scheduler">
+      <PageHeader
+        title="Scheduler"
+        actions={
+          <button
+            onClick={() => setCreating(true)}
+            className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-black hover:opacity-90"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New schedule
+          </button>
+        }
+      >
         <span className="text-[12px] text-faint">
           {meta?.total_count ?? 0} schedules
         </span>
@@ -206,6 +341,15 @@ export function Scheduler() {
         />
         <Pager page={page} totalPages={meta?.total_pages ?? 1} onPage={setPage} />
       </div>
+
+      <Drawer open={creating} title="New schedule" onClose={() => setCreating(false)}>
+        <ScheduleForm
+          onSaved={() => {
+            setCreating(false)
+            reload()
+          }}
+        />
+      </Drawer>
 
       <Drawer
         open={!!selected}

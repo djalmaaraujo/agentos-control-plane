@@ -141,6 +141,66 @@ function SpanTree({
   )
 }
 
+function spanMs(s: TraceSpan): { start: number; end: number } | null {
+  const st = s.start_time ? Date.parse(s.start_time) : NaN
+  const en = s.end_time ? Date.parse(s.end_time) : NaN
+  if (!Number.isNaN(st) && !Number.isNaN(en)) return { start: st, end: en }
+  return null
+}
+
+function Timeline({
+  tree,
+  selectedId,
+  onSelect
+}: {
+  tree: TraceSpan[]
+  selectedId?: string
+  onSelect: (s: TraceSpan) => void
+}) {
+  const rows = flatten(tree, 0, new Set(), [])
+  const times = rows.map((r) => spanMs(r.span)).filter(Boolean) as { start: number; end: number }[]
+  const min = Math.min(...times.map((t) => t.start))
+  const max = Math.max(...times.map((t) => t.end))
+  const total = Math.max(1, max - min)
+
+  return (
+    <div className="py-1">
+      {rows.map(({ span, depth }) => {
+        const t = spanMs(span)
+        const left = t ? ((t.start - min) / total) * 100 : 0
+        const width = t ? Math.max(1.5, ((t.end - t.start) / total) * 100) : 2
+        const { color } = spanIcon(span.type)
+        return (
+          <button
+            key={span.id}
+            onClick={() => onSelect(span)}
+            className={cn(
+              'flex w-full items-center gap-3 py-1.5 pr-3 text-left transition-colors hover:bg-white/[0.04]',
+              selectedId === span.id && 'bg-white/[0.06]'
+            )}
+          >
+            <span
+              className="w-[42%] shrink-0 truncate font-mono text-[12px] text-muted"
+              style={{ paddingLeft: 8 + depth * 12 }}
+            >
+              {span.name}
+            </span>
+            <span className="relative h-3.5 flex-1 rounded bg-black/30">
+              <span
+                className={cn('absolute top-0 h-3.5 rounded', color)}
+                style={{ left: `${left}%`, width: `${width}%` }}
+              />
+            </span>
+            <span className="w-14 shrink-0 text-right font-mono text-[11px] text-faint">
+              {dur(span.duration)}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 function Payload({ value }: { value: unknown }) {
   const [formatted, setFormatted] = useState(true)
   const asString = typeof value === 'string' ? value : JSON.stringify(value)
@@ -262,6 +322,7 @@ export function TraceDetail({
     [traceId]
   )
   const [selected, setSelected] = useState<TraceSpan | null>(null)
+  const [view, setView] = useState<'tree' | 'timeline'>('tree')
   // The root span carries no input/output in the tree — they live at trace level.
   const tree = useMemo(() => {
     const t = data?.tree ?? []
@@ -319,14 +380,28 @@ export function TraceDetail({
 
           <div className="grid flex-1 grid-cols-1 gap-4 overflow-hidden px-8 pb-8 lg:grid-cols-2">
             <div className="overflow-y-auto rounded-lg border border-border bg-card">
-              <div className="border-b border-border px-4 py-3">
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <span className="label">{data.total_spans ?? tree.length} spans</span>
+                <div className="flex items-center gap-0.5 rounded-md border border-border p-0.5">
+                  {(['tree', 'timeline'] as const).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setView(v)}
+                      className={cn(
+                        'rounded px-2 py-1 font-mono text-[10px] uppercase',
+                        view === v ? 'bg-white/10 text-white' : 'text-faint'
+                      )}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <SpanTree
-                tree={tree}
-                selectedId={current?.id}
-                onSelect={setSelected}
-              />
+              {view === 'tree' ? (
+                <SpanTree tree={tree} selectedId={current?.id} onSelect={setSelected} />
+              ) : (
+                <Timeline tree={tree} selectedId={current?.id} onSelect={setSelected} />
+              )}
             </div>
             <div className="overflow-hidden rounded-lg border border-border bg-card">
               {current ? (

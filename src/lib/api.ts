@@ -1,4 +1,4 @@
-import { apiGet, apiJson } from './client'
+import { apiForm, apiGet, apiJson } from './client'
 import type {
   Approval,
   Component,
@@ -54,6 +54,12 @@ export const api = {
   memoryTopics: (s?: AbortSignal) => apiGet<string[]>('/memory_topics', undefined, s),
   deleteMemory: (id: string) => apiJson(`/memories/${id}`, 'DELETE'),
   optimizeMemories: () => apiJson('/optimize-memories', 'POST'),
+  createMemory: (body: { memory: string; user_id?: string; topics?: string[] }) =>
+    apiJson('/memories', 'POST', body),
+  updateMemory: (
+    id: string,
+    body: { memory: string; user_id?: string; topics?: string[] }
+  ) => apiJson(`/memories/${id}`, 'PATCH', body),
 
   metrics: (q: Q, s?: AbortSignal) => apiGet<MetricsResponse>('/metrics', q, s),
   refreshMetrics: () => apiJson('/metrics/refresh', 'POST'),
@@ -68,12 +74,27 @@ export const api = {
   triggerSchedule: (id: string) => apiJson(`/schedules/${id}/trigger`, 'POST'),
   scheduleRuns: (id: string, q: Q, s?: AbortSignal) =>
     apiGet<Paginated<ScheduleRun>>(`/schedules/${id}/runs`, q, s),
+  createSchedule: (body: {
+    name: string
+    cron_expr: string
+    endpoint: string
+    method?: string
+    description?: string
+    payload?: Record<string, unknown>
+    timezone?: string
+  }) => apiJson('/schedules', 'POST', body),
 
   serviceAccounts: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<ServiceAccount>>('/service-accounts', q, s),
 
   knowledgeContent: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<KnowledgeContent>>('/knowledge/content', q, s),
+  addKnowledgeContent: (knowledgeId: string, form: FormData) =>
+    apiForm(`/knowledge/content?knowledge_id=${encodeURIComponent(knowledgeId)}`, form),
+  refreshKnowledgeContent: (id: string) =>
+    apiJson(`/knowledge/content/${id}/refresh`, 'POST'),
+  deleteKnowledgeContent: (id: string) =>
+    apiJson(`/knowledge/content/${id}`, 'DELETE'),
 
   approvals: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<Approval>>('/approvals', q, s),

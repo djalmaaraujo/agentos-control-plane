@@ -13,25 +13,26 @@ proxy serves the app and forwards `/api` to your AgentOS runtime.
 
 - **Home** — agents, teams, workflows and interfaces as cards; open a chat or a
   config drawer (model, tools, instructions, history) for any component.
-- **Chat** — stream a run (SSE) against an agent or team, with markdown replies,
-  live tool calls (arguments + result), reasoning, and resume / rename / delete
-  of past sessions.
+- **Chat** — stream a run (SSE) against an agent, team or workflow, with markdown
+  replies, live tool calls (arguments + result), reasoning, workflow steps, and
+  resume / rename / delete of past sessions.
 - **Sessions** — every session with a tabbed detail (conversation, token metrics,
   metadata).
-- **Traces** — a span waterfall (agent / team / model / tool) with per-span
-  input, output and metadata.
+- **Traces** — spans as a tree or a time-axis timeline (agent / team / model /
+  tool), with per-span input, output and metadata.
 - **Studio** — build and version agents, teams and workflows at runtime with a
   guided form (model, instructions, tools, members, mode, history) or raw config
   JSON; manage config versions and set the current one.
 - **Learning** — user memories, profiles, entity memories, session context and
   decision logs.
-- **Memory** — stored memories with search, delete and optimize.
-- **Knowledge** — documents per knowledge base.
+- **Memory** — stored memories with search; create, edit, delete and optimize.
+- **Knowledge** — documents per knowledge base; add content (text / URL / file),
+  refresh and delete.
 - **Metrics** — per-metric charts (tokens, users, runs, sessions, model mix), a
   month picker and a recalculate action.
 - **Evaluations** — eval runs with the tool-call / judge breakdown.
 - **Approvals** — tool calls waiting for a human; approve or reject.
-- **Scheduler** — cron schedules with run history; enable, disable, trigger.
+- **Scheduler** — create cron schedules; run history; enable, disable, trigger.
 - **Manage OS** — service accounts, the build registry, and database migrations.
 - **Settings** — OS info, server switcher, access, interfaces, databases, models.
 

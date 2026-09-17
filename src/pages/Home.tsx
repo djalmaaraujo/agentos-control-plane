@@ -54,7 +54,7 @@ function ComponentSection({
             kind={kind}
             component={c}
             manifest={config.manifest?.[c.id]}
-            onChat={kind === 'workflow' ? undefined : () => onChat(kind, c)}
+            onChat={() => onChat(kind, c)}
             onConfig={() => onConfig(kind, c)}
           />
         ))}
