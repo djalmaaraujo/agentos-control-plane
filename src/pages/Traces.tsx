@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { Plus, SlidersHorizontal, X } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
+import { useApi } from '@/lib/useApi'
 import { useOS } from '@/lib/osContext'
 import { formatDateTime, formatDuration } from '@/lib/format'
-import type { Trace, TraceSessionStat } from '@/lib/types'
+import type { Trace, TraceFilterSchema, TraceSessionStat } from '@/lib/types'
 import {
   PageHeader,
   DataTable,
@@ -18,6 +19,131 @@ import { exportCsv, exportJson } from '@/lib/export'
 import { TraceDetail } from './TraceDetail'
 import { cn } from '@/lib/utils'
 
+interface Condition {
+  key: string
+  op: string
+  value: string
+}
+
+function buildTraceFilter(conds: Condition[]): unknown | null {
+  const valid = conds.filter((c) => c.key && c.op && c.value.trim())
+  if (!valid.length) return null
+  const nodes = valid.map((c) =>
+    c.op === 'IN'
+      ? { op: 'IN', key: c.key, values: c.value.split(',').map((v) => v.trim()).filter(Boolean) }
+      : { op: c.op, key: c.key, value: c.value.trim() }
+  )
+  return nodes.length === 1 ? nodes[0] : { op: 'AND', conditions: nodes }
+}
+
+function FilterBar({
+  schema,
+  onApply
+}: {
+  schema?: TraceFilterSchema
+  onApply: (filter: unknown | null) => void
+}) {
+  const fields = schema?.fields ?? []
+  const [conds, setConds] = useState<Condition[]>([{ key: '', op: '', value: '' }])
+
+  const setCond = (i: number, patch: Partial<Condition>) =>
+    setConds((cs) => cs.map((c, j) => (j === i ? { ...c, ...patch } : c)))
+  const field = (key: string) => fields.find((f) => f.key === key)
+
+  return (
+    <div className="space-y-2 border-b border-border-soft px-8 py-3">
+      {conds.map((c, i) => {
+        const f = field(c.key)
+        return (
+          <div key={i} className="flex items-center gap-2">
+            <select
+              value={c.key}
+              onChange={(e) =>
+                setCond(i, { key: e.target.value, op: field(e.target.value)?.operators[0] ?? '', value: '' })
+              }
+              className="rounded-md border border-border bg-panel px-2 py-1.5 text-[12px] text-fg outline-none"
+            >
+              <option value="">Field…</option>
+              {fields.map((fl) => (
+                <option key={fl.key} value={fl.key}>
+                  {fl.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={c.op}
+              onChange={(e) => setCond(i, { op: e.target.value })}
+              disabled={!f}
+              className="rounded-md border border-border bg-panel px-2 py-1.5 font-mono text-[11px] text-muted outline-none disabled:opacity-40"
+            >
+              {(f?.operators ?? []).map((op) => (
+                <option key={op} value={op}>
+                  {op}
+                </option>
+              ))}
+            </select>
+            {f?.values ? (
+              <select
+                value={c.value}
+                onChange={(e) => setCond(i, { value: e.target.value })}
+                className="rounded-md border border-border bg-panel px-2 py-1.5 text-[12px] text-fg outline-none"
+              >
+                <option value="">Value…</option>
+                {f.values.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                value={c.value}
+                onChange={(e) => setCond(i, { value: e.target.value })}
+                placeholder={c.op === 'IN' ? 'a, b, c' : 'value'}
+                disabled={!f}
+                className="w-48 rounded-md border border-border bg-panel px-2 py-1.5 text-[12px] text-fg outline-none disabled:opacity-40"
+              />
+            )}
+            <button
+              onClick={() => setConds((cs) => (cs.length > 1 ? cs.filter((_, j) => j !== i) : cs))}
+              className="rounded p-1 text-faint hover:text-red-300"
+              title="Remove"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )
+      })}
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          onClick={() => setConds((cs) => [...cs, { key: '', op: '', value: '' }])}
+          className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
+        >
+          <Plus className="h-3 w-3" /> Condition
+        </button>
+        <button
+          onClick={() => onApply(buildTraceFilter(conds))}
+          className="ml-auto rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-black hover:opacity-90"
+        >
+          Apply
+        </button>
+        <button
+          onClick={() => {
+            setConds([{ key: '', op: '', value: '' }])
+            onApply(null)
+          }}
+          className="rounded-md border border-border px-3 py-1.5 text-[12px] text-muted hover:bg-hover hover:text-fg"
+        >
+          Clear
+        </button>
+      </div>
+      <p className="font-mono text-[10px] text-faint">
+        Multiple conditions are combined with AND.
+      </p>
+    </div>
+  )
+}
+
 export function Traces() {
   const { config } = useOS()
   const [tab, setTab] = useState<'sessions' | 'runs'>('runs')
@@ -25,12 +151,30 @@ export function Traces() {
   const [range, setRange] = useState<TimeRangeKey>('all')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
+  const [advanced, setAdvanced] = useState(false)
+  const [filter, setFilter] = useState<unknown | null>(null)
 
-  const runs = usePaginatedList<Trace>((params, s) => api.traces(params, s), {
-    limit: 25,
-    params: { ...rangeParams(range), ...(sessionId ? { session_id: sessionId } : {}) },
-    enabled: tab === 'runs'
-  })
+  const filterSchema = useApi<TraceFilterSchema>(
+    (s) => api.traceFilterSchema(s),
+    []
+  )
+
+  const runs = usePaginatedList<Trace>(
+    (params, s) =>
+      params.filter
+        ? api.tracesSearch(
+            { filter: params.filter, page: params.page as number, limit: params.limit as number },
+            s
+          )
+        : api.traces(params, s),
+    {
+      limit: 25,
+      params: filter
+        ? { filter }
+        : { ...rangeParams(range), ...(sessionId ? { session_id: sessionId } : {}) },
+      enabled: tab === 'runs'
+    }
+  )
   const sessions = usePaginatedList<TraceSessionStat>(
     (params, s) => api.traceSessionStats(params, s),
     { limit: 25, enabled: tab === 'sessions' }
@@ -67,6 +211,20 @@ export function Traces() {
               className="w-56 rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-fg outline-none focus:border-accent"
             />
             <TimeRange value={range} onChange={setRange} />
+            {tab === 'runs' && (
+              <button
+                onClick={() => setAdvanced((a) => !a)}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-[12px]',
+                  advanced || filter
+                    ? 'border-accent/60 bg-accent-dim text-accent'
+                    : 'border-border text-muted hover:bg-hover hover:text-fg'
+                )}
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Filters
+              </button>
+            )}
             <ExportMenu
               onCsv={() =>
                 tab === 'runs'
@@ -105,6 +263,10 @@ export function Traces() {
           </button>
         )}
       </div>
+
+      {tab === 'runs' && advanced && (
+        <FilterBar schema={filterSchema.data ?? undefined} onApply={setFilter} />
+      )}
 
       <div className="px-8 py-2">
         {tab === 'runs' ? (

@@ -13,6 +13,7 @@ import { PageHeader, DataTable, Pager, Drawer, PrimitiveTag } from '@/components
 import { DbTableHeader, ExportMenu } from '@/components/shared'
 import { exportCsv, exportJson } from '@/lib/export'
 import { Markdown } from '@/components/Markdown'
+import { MediaView } from '@/components/Media'
 import { cn } from '@/lib/utils'
 import { Spinner } from '@/components/ui'
 
@@ -74,13 +75,15 @@ function RunsTab({ session }: { session: Session }) {
             </span>
           </div>
           <div className="pl-7">
-            {m.role === 'assistant' ? (
-              <Markdown>{m.content}</Markdown>
-            ) : (
-              <p className="whitespace-pre-wrap text-[14px] text-fg">
-                {m.content}
-              </p>
-            )}
+            {m.content &&
+              (m.role === 'assistant' ? (
+                <Markdown>{m.content}</Markdown>
+              ) : (
+                <p className="whitespace-pre-wrap text-[14px] text-fg">
+                  {m.content}
+                </p>
+              ))}
+            <MediaView items={m.media} />
           </div>
         </div>
       ))}

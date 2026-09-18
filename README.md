@@ -18,10 +18,11 @@ proxy serves the app and forwards `/api` to your AgentOS runtime.
 - **Chat** — stream a run (SSE) against an agent, team or workflow, with markdown
   replies, live tool calls (arguments + result), reasoning, workflow steps, and
   resume / rename / delete of past sessions.
-- **Sessions** — every session with a tabbed detail (conversation, token metrics,
-  metadata).
+- **Sessions** — every session with a tabbed detail (conversation with inline
+  attachments/media, token metrics, metadata).
 - **Traces** — spans as a tree or a time-axis timeline (agent / team / model /
-  tool), with per-span input, output and metadata.
+  tool), with per-span input, output and metadata, plus a server-side filter
+  builder (status, ids, …).
 - **Studio** — build, version and publish agents, teams and workflows at runtime
   with a guided form (model, instructions, tools, members, mode, history) or raw
   config JSON; teams and workflows get a visual canvas (React Flow) — members and
@@ -29,15 +30,17 @@ proxy serves the app and forwards `/api` to your AgentOS runtime.
   **API access** panel (REST + MCP snippets) on published components. Your
   code-defined components show read-only alongside the Studio-authored ones.
 - **Learning** — user memories, profiles, entity memories, session context and
-  decision logs.
+  decision logs; edit or delete entries.
 - **Memory** — stored memories with search; create, edit, delete and optimize.
 - **Knowledge** — documents per knowledge base; add content (text / URL / file),
-  refresh and delete.
+  semantic search, refresh and delete.
 - **Metrics** — per-metric charts (tokens, users, runs, sessions, model mix), a
   month picker and a recalculate action.
-- **Evaluations** — eval runs with the tool-call / judge breakdown.
+- **Evaluations** — launch accuracy / reliability / judge / performance runs and
+  review the tool-call / judge breakdown; delete runs.
 - **Approvals** — tool calls waiting for a human; approve or reject.
-- **Scheduler** — create cron schedules; run history; enable, disable, trigger.
+- **Scheduler** — create and edit cron schedules; run history; enable, disable,
+  trigger.
 - **Manage OS** — service accounts (scoped machine tokens), the build registry,
   and database migrations.
 - **Settings** — OS info, server switcher, access, interfaces, databases, models.

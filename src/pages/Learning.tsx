@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { Check, Loader2, Pencil, X } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
 import { useOS } from '@/lib/osContext'
@@ -57,6 +58,9 @@ export function Learning() {
   const mod = MODULES[module] ?? MODULES['user-memories']
   const { config } = useOS()
   const [selected, setSelected] = useState<LearningRow | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [editText, setEditText] = useState('')
+  const [saving, setSaving] = useState(false)
 
   const { rows, meta, loading, error, page, setPage, reload } =
     usePaginatedList<LearningRow>(
@@ -65,6 +69,30 @@ export function Learning() {
     )
 
   const mem = selected ? firstMemory(selected) : undefined
+
+  const startEdit = () => {
+    setEditText(mem?.content ?? '')
+    setEditing(true)
+  }
+  const saveEdit = async () => {
+    if (!selected) return
+    setSaving(true)
+    try {
+      const content = (selected.content ?? {}) as Record<string, unknown>
+      const memories = (content.memories as Record<string, unknown>[] | undefined) ?? []
+      const updated = memories.length
+        ? memories.map((m, i) => (i === 0 ? { ...m, content: editText } : m))
+        : [{ content: editText }]
+      await api.updateLearning(selected.learning_id, {
+        content: { ...content, memories: updated }
+      })
+      setEditing(false)
+      setSelected(null)
+      reload()
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div>
@@ -128,11 +156,57 @@ export function Learning() {
       <Drawer
         open={!!selected}
         title={<span className="line-clamp-1">{mem?.content ?? mod.title}</span>}
-        onClose={() => setSelected(null)}
+        onClose={() => {
+          setSelected(null)
+          setEditing(false)
+        }}
       >
         {selected && (
           <div className="space-y-5">
-            <Field label="Content" value={mem?.content} />
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="label">Content</span>
+                {!editing && (
+                  <button
+                    onClick={startEdit}
+                    className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
+                  >
+                    <Pencil className="h-3 w-3" /> edit
+                  </button>
+                )}
+              </div>
+              {editing ? (
+                <div className="space-y-2">
+                  <textarea
+                    autoFocus
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    rows={4}
+                    className="w-full resize-y rounded-lg border border-accent/50 bg-inset px-3 py-2.5 text-[13px] text-fg outline-none"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveEdit}
+                      disabled={saving || !editText.trim()}
+                      className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-black hover:opacity-90 disabled:opacity-40"
+                    >
+                      {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditing(false)}
+                      className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-[12px] text-muted hover:bg-hover hover:text-fg"
+                    >
+                      <X className="h-3.5 w-3.5" /> Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-border bg-inset px-3 py-2.5 text-[13px] text-muted">
+                  {mem?.content ?? '—'}
+                </div>
+              )}
+            </div>
             <Field label="Added by agent" value={mem?.added_by_agent ?? selected.agent_id} mono />
             {mem?.source && <Field label="Source" value={mem.source} />}
             <div className="grid grid-cols-2 gap-4">

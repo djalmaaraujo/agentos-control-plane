@@ -23,6 +23,7 @@ import type {
   Session,
   Trace,
   TraceDetail,
+  TraceFilterSchema,
   TraceSessionStat
 } from './types'
 
@@ -67,6 +68,12 @@ export const api = {
     ),
 
   traces: (q: Q, s?: AbortSignal) => apiGet<Paginated<Trace>>('/traces', q, s),
+  traceFilterSchema: (s?: AbortSignal) =>
+    apiGet<TraceFilterSchema>('/traces/filter-schema', undefined, s),
+  tracesSearch: (
+    body: { filter?: unknown; page?: number; limit?: number },
+    s?: AbortSignal
+  ) => apiJson<Paginated<Trace>>('/traces/search', 'POST', body, s),
   trace: (id: string, s?: AbortSignal) =>
     apiGet<TraceDetail>(`/traces/${id}`, undefined, s),
   traceSessionStats: (q: Q, s?: AbortSignal) =>
@@ -107,6 +114,16 @@ export const api = {
 
   schedules: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<Schedule>>('/schedules', q, s),
+  updateSchedule: (
+    id: string,
+    body: {
+      name?: string
+      cron_expr?: string
+      timezone?: string
+      description?: string
+      payload?: Record<string, unknown>
+    }
+  ) => apiJson(`/schedules/${id}`, 'PATCH', body),
   enableSchedule: (id: string) => apiJson(`/schedules/${id}/enable`, 'POST'),
   disableSchedule: (id: string) => apiJson(`/schedules/${id}/disable`, 'POST'),
   triggerSchedule: (id: string) => apiJson(`/schedules/${id}/trigger`, 'POST'),
@@ -158,6 +175,10 @@ export const api = {
   learnings: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<Learning>>('/learnings', q, s),
   deleteLearning: (id: string) => apiJson(`/learnings/${id}`, 'DELETE'),
+  updateLearning: (
+    id: string,
+    body: { content?: Record<string, unknown>; metadata?: Record<string, unknown> }
+  ) => apiJson(`/learnings/${id}`, 'PATCH', body),
 
   agent: (id: string, s?: AbortSignal) =>
     apiGet<ComponentDetail>(`/agents/${id}`, undefined, s),

@@ -337,6 +337,19 @@ export interface KnowledgeContent {
   updated_at?: string | number
 }
 
+export interface TraceFilterField {
+  key: string
+  label: string
+  type: string
+  operators: string[]
+  values?: string[] | null
+}
+
+export interface TraceFilterSchema {
+  fields: TraceFilterField[]
+  logical_operators?: string[]
+}
+
 export interface KnowledgeSearchHit {
   id?: string
   name?: string
