@@ -228,6 +228,8 @@ export interface ServiceAccount {
   token_preview?: string
   token_prefix?: string
   expires_at?: string | number | null
+  revoked_at?: string | number | null
+  scopes?: { raw?: string; value?: string }[]
   token?: string
 }
 

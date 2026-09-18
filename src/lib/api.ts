@@ -97,8 +97,10 @@ export const api = {
     apiGet<Paginated<ServiceAccount>>('/service-accounts', q, s),
   createServiceAccount: (body: {
     name: string
+    scopes?: { scope: string; effect: 'allow' }[]
     never_expires?: boolean
     expires_in_days?: number
+    allow_privileged_scopes?: boolean
   }) => apiJson<ServiceAccount>('/service-accounts', 'POST', body),
   deleteServiceAccount: (id: string) =>
     apiJson(`/service-accounts/${id}`, 'DELETE'),
