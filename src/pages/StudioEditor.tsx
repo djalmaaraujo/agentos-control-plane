@@ -1,10 +1,11 @@
 import { lazy, Suspense, useState } from 'react'
-import { ChevronLeft, Loader2, Check } from 'lucide-react'
+import { ChevronLeft, Loader2, Check, Eye } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
 import { formatDateTime } from '@/lib/format'
 import type { Component, ComponentConfig, ComponentType } from '@/lib/types'
 import { ComponentForm, type FormOptions } from '@/components/ComponentForm'
+import { Drawer, JsonBlock, ConfirmDelete } from '@/components/data'
 import { CopyBlock } from '@/components/shared'
 import { Spinner } from '@/components/ui'
 
@@ -65,8 +66,19 @@ export function StudioEditor({
   )
   const [draft, setDraft] = useState<Record<string, unknown> | null>(null)
   const [busy, setBusy] = useState(false)
+  const [viewing, setViewing] = useState<ComponentConfig | null>(null)
 
   const config = draft ?? data?.config ?? {}
+
+  const viewVersion = async (version: number) => {
+    setViewing(await api.componentConfig(component.component_id, version))
+  }
+
+  const deleteVersion = async (version: number) => {
+    await api.deleteComponentConfig(component.component_id, version)
+    versions.reload()
+    reload()
+  }
 
   const save = async () => {
     setBusy(true)
@@ -211,19 +223,36 @@ export function StudioEditor({
                           <span className="font-mono text-[10px] text-faint">
                             {formatDateTime(v.created_at)}
                           </span>
+                          {v.stage && (
+                            <span className="font-mono text-[10px] uppercase text-faint">
+                              {v.stage}
+                            </span>
+                          )}
                         </div>
-                        {isCurrent ? (
-                          <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase text-emerald-400">
-                            <Check className="h-3 w-3" /> current
-                          </span>
-                        ) : (
+                        <div className="flex items-center gap-3">
                           <button
-                            onClick={() => setCurrent(v.version)}
-                            className="font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
+                            onClick={() => viewVersion(v.version)}
+                            className="text-faint hover:text-fg"
+                            title="View config"
                           >
-                            Set current
+                            <Eye className="h-3.5 w-3.5" />
                           </button>
-                        )}
+                          {isCurrent ? (
+                            <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase text-emerald-400">
+                              <Check className="h-3 w-3" /> current
+                            </span>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => setCurrent(v.version)}
+                                className="font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
+                              >
+                                Set current
+                              </button>
+                              <ConfirmDelete onConfirm={() => deleteVersion(v.version)} />
+                            </>
+                          )}
+                        </div>
                       </div>
                     )
                   })}
@@ -232,6 +261,19 @@ export function StudioEditor({
           </div>
         </div>
       )}
+
+      <Drawer
+        open={!!viewing}
+        title={
+          <span className="font-mono text-[13px]">
+            v{viewing?.version}
+            {viewing?.stage && <span className="text-faint"> · {viewing.stage}</span>}
+          </span>
+        }
+        onClose={() => setViewing(null)}
+      >
+        {viewing && <JsonBlock value={viewing.config ?? {}} />}
+      </Drawer>
     </div>
   )
 }

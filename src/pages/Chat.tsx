@@ -256,6 +256,7 @@ export function Chat() {
   const [showSessions, setShowSessions] = useState(false)
   const [loadingSession, setLoadingSession] = useState(false)
   const sessionId = useRef<string | null>(null)
+  const runId = useRef<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -343,6 +344,7 @@ export function Chat() {
     setStreaming(true)
     const controller = new AbortController()
     abortRef.current = controller
+    runId.current = null
 
     const form = new FormData()
     form.set('message', text)
@@ -357,6 +359,7 @@ export function Chat() {
     try {
       for await (const ev of streamRun(path, form, controller.signal)) {
         if (typeof ev.session_id === 'string') sessionId.current = ev.session_id
+        if (typeof ev.run_id === 'string') runId.current = ev.run_id
         const name = typeof ev.event === 'string' ? ev.event : ''
 
         if (name === 'StepStarted') {
@@ -636,6 +639,10 @@ export function Chat() {
               onClick={() => {
                 abortRef.current?.abort()
                 setStreaming(false)
+                if (current && runId.current)
+                  api
+                    .cancelRun(type, current.id, runId.current, sessionId.current ?? undefined)
+                    .catch(() => {})
               }}
               title="Stop"
               className="flex h-8 w-8 items-center justify-center rounded-lg bg-hoverstrong text-fg hover:bg-hoverstrong"

@@ -280,9 +280,11 @@ export interface Component {
   name?: string
   description?: string
   current_version?: number
+  stage?: string
   metadata?: Record<string, unknown>
   created_at?: number
   updated_at?: number
+  deleted_at?: number | null
 }
 
 export interface ComponentConfig {
@@ -334,3 +336,16 @@ export interface KnowledgeContent {
   created_at?: string | number
   updated_at?: string | number
 }
+
+export interface KnowledgeSearchHit {
+  id?: string
+  name?: string
+  content?: string
+  content_id?: string
+  content_origin?: string
+  reranking_score?: number | null
+  meta_data?: Record<string, unknown>
+  size?: number
+}
+
+export type KnowledgeSearchResult = Paginated<KnowledgeSearchHit>

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2, Plus, RotateCw } from 'lucide-react'
+import { Loader2, Plus, RotateCw, Search } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
 import { useOS } from '@/lib/osContext'
 import { formatDateTime } from '@/lib/format'
-import type { KnowledgeContent } from '@/lib/types'
+import type { KnowledgeContent, KnowledgeSearchHit } from '@/lib/types'
 import {
   PageHeader,
   DataTable,
@@ -137,6 +137,79 @@ function AddContentForm({
   )
 }
 
+function SearchPanel({ knowledgeId }: { knowledgeId: string }) {
+  const [query, setQuery] = useState('')
+  const [hits, setHits] = useState<KnowledgeSearchHit[] | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const run = async () => {
+    if (!query.trim()) return
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await api.knowledgeSearch({
+        query: query.trim(),
+        knowledge_id: knowledgeId,
+        max_results: 10
+      })
+      setHits(res.data ?? [])
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <input
+          autoFocus
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && run()}
+          placeholder="Semantic search…"
+          className="flex-1 rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
+        />
+        <button
+          onClick={run}
+          disabled={busy || !query.trim()}
+          className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-40"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          Search
+        </button>
+      </div>
+      {error && <p className="text-[12px] text-red-300">{error}</p>}
+      {hits && hits.length === 0 && (
+        <p className="text-sm text-faint">No matches.</p>
+      )}
+      <div className="space-y-3">
+        {(hits ?? []).map((h, i) => (
+          <div key={h.id ?? i} className="rounded-lg border border-border bg-inset p-3">
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <span className="truncate font-mono text-[12px] text-fg">
+                {h.name || h.content_id || `hit ${i + 1}`}
+              </span>
+              {typeof h.reranking_score === 'number' && (
+                <span className="shrink-0 font-mono text-[10px] text-faint">
+                  score {h.reranking_score.toFixed(3)}
+                </span>
+              )}
+            </div>
+            {h.content && (
+              <p className="line-clamp-4 whitespace-pre-wrap text-[12px] leading-relaxed text-muted">
+                {h.content}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function RefreshButton({ id, onDone }: { id: string; onDone: () => void }) {
   const [busy, setBusy] = useState(false)
   return (
@@ -168,6 +241,7 @@ export function Knowledge() {
   const [kid, setKid] = useState('')
   const [selected, setSelected] = useState<KnowledgeContent | null>(null)
   const [adding, setAdding] = useState(false)
+  const [searching, setSearching] = useState(false)
   const active = instances.find((i) => i.id === kid)
 
   useEffect(() => {
@@ -198,6 +272,14 @@ export function Knowledge() {
                   </option>
                 ))}
               </select>
+              <button
+                onClick={() => setSearching(true)}
+                disabled={!kid}
+                className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-[12px] text-muted hover:bg-hover hover:text-fg disabled:opacity-40"
+              >
+                <Search className="h-3.5 w-3.5" />
+                Search
+              </button>
               <button
                 onClick={() => setAdding(true)}
                 disabled={!kid}
@@ -279,6 +361,18 @@ export function Knowledge() {
         />
         <Pager page={page} totalPages={meta?.total_pages ?? 1} onPage={setPage} />
       </div>
+
+      <Drawer
+        open={searching}
+        title={
+          <span>
+            Search · <span className="text-muted">{active?.name}</span>
+          </span>
+        }
+        onClose={() => setSearching(false)}
+      >
+        {kid && <SearchPanel key={kid} knowledgeId={kid} />}
+      </Drawer>
 
       <Drawer open={adding} title="Add content" onClose={() => setAdding(false)}>
         {kid && (

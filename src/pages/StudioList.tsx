@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Bot, Loader2, MoreVertical, Plus, Trash2, Users, Workflow } from 'lucide-react'
+import { Bot, Loader2, MoreVertical, Plus, RotateCcw, Trash2, Users, Workflow } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
+import { useApi } from '@/lib/useApi'
 import { useFormOptions } from '@/lib/useFormOptions'
 import { useOS } from '@/lib/osContext'
-import type { Component, ComponentRef, ComponentType } from '@/lib/types'
+import type { Component, ComponentRef, ComponentType, Paginated } from '@/lib/types'
 import { PageHeader } from '@/components/data'
 import { PageEmpty, CardGrid } from '@/components/shared'
 import { Card, PillButton, Spinner } from '@/components/ui'
@@ -222,7 +223,20 @@ export function StudioList() {
     (params, s) => api.components(params, s),
     { limit: 100 }
   )
+  const archived = useApi<Paginated<Component>>(
+    (s) => api.components({ include_deleted: true, limit: 100 }, s),
+    []
+  )
   const items = rows.filter((r) => r.component_type === meta.type)
+  const archivedItems = (archived.data?.data ?? []).filter(
+    (r) => r.component_type === meta.type && r.deleted_at
+  )
+
+  const restore = async (id: string) => {
+    await api.restoreComponent(id)
+    reload()
+    archived.reload()
+  }
   const codeItems =
     (meta.type === 'agent'
       ? config?.agents
@@ -324,12 +338,40 @@ export function StudioList() {
                       component={c}
                       onChat={() => navigate(`/chat?type=${c.component_type}&id=${c.component_id}`)}
                       onEdit={() => setEditing(c)}
-                      onDeleted={reload}
+                      onDeleted={() => {
+                        reload()
+                        archived.reload()
+                      }}
                     />
                   ))}
                 </CardGrid>
               )}
             </section>
+
+            {archivedItems.length > 0 && (
+              <section>
+                <div className="label mb-3">Archived</div>
+                <div className="space-y-1.5">
+                  {archivedItems.map((c) => (
+                    <div
+                      key={c.component_id}
+                      className="flex items-center justify-between rounded-md border border-border-soft px-3 py-2"
+                    >
+                      <span className="text-[13px] text-muted">
+                        {c.name || c.component_id}
+                      </span>
+                      <button
+                        onClick={() => restore(c.component_id)}
+                        className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-faint hover:text-fg"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Restore
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </>
         )}
       </div>

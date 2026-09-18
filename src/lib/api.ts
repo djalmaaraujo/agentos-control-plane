@@ -9,6 +9,7 @@ import type {
   DailyMetric,
   EvalRun,
   KnowledgeContent,
+  KnowledgeSearchResult,
   Learning,
   Memory,
   MetricsResponse,
@@ -28,6 +29,9 @@ import type {
 export { ApiError } from './client'
 
 type Q = Record<string, unknown>
+
+const runBase = (type: 'agent' | 'team' | 'workflow') =>
+  type === 'team' ? 'teams' : type === 'workflow' ? 'workflows' : 'agents'
 
 export const api = {
   info: (s?: AbortSignal) => apiGet<OSInfo>('/info', undefined, s),
@@ -49,6 +53,16 @@ export const api = {
   forkSession: (type: 'agent' | 'team', componentId: string, sessionId: string) =>
     apiJson<{ session_id?: string }>(
       `/${type === 'team' ? 'teams' : 'agents'}/${componentId}/sessions/${sessionId}/fork`,
+      'POST'
+    ),
+  cancelRun: (
+    type: 'agent' | 'team' | 'workflow',
+    id: string,
+    runId: string,
+    sessionId?: string
+  ) =>
+    apiJson(
+      `/${runBase(type)}/${id}/runs/${runId}/cancel${sessionId ? `?session_id=${sessionId}` : ''}`,
       'POST'
     ),
 
@@ -75,6 +89,21 @@ export const api = {
 
   evalRuns: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<EvalRun>>('/eval-runs', q, s),
+  createEvalRun: (body: {
+    eval_type: string
+    input: string
+    agent_id?: string
+    team_id?: string
+    name?: string
+    num_iterations?: number
+    expected_output?: string
+    criteria?: string
+    additional_guidelines?: string
+    scoring_strategy?: 'numeric' | 'binary'
+    expected_tool_calls?: string[]
+  }) => apiJson<EvalRun>('/eval-runs', 'POST', body),
+  deleteEvalRun: (id: string) =>
+    apiJson('/eval-runs', 'DELETE', { eval_run_ids: [id] }),
 
   schedules: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<Schedule>>('/schedules', q, s),
@@ -113,6 +142,11 @@ export const api = {
     apiJson(`/knowledge/content/${id}/refresh`, 'POST'),
   deleteKnowledgeContent: (id: string) =>
     apiJson(`/knowledge/content/${id}`, 'DELETE'),
+  knowledgeSearch: (body: {
+    query: string
+    knowledge_id?: string
+    max_results?: number
+  }) => apiJson<KnowledgeSearchResult>('/knowledge/search', 'POST', body),
 
   approvals: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<Approval>>('/approvals', q, s),
@@ -147,10 +181,15 @@ export const api = {
     set_current?: boolean
   }) => apiJson<Component>('/components', 'POST', body),
   deleteComponent: (id: string) => apiJson(`/components/${id}`, 'DELETE'),
+  restoreComponent: (id: string) => apiJson(`/components/${id}/restore`, 'POST'),
   componentConfigs: (id: string, s?: AbortSignal) =>
     apiGet<ComponentConfig[]>(`/components/${id}/configs`, undefined, s),
   componentCurrentConfig: (id: string, s?: AbortSignal) =>
     apiGet<ComponentConfig>(`/components/${id}/configs/current`, undefined, s),
+  componentConfig: (id: string, version: number, s?: AbortSignal) =>
+    apiGet<ComponentConfig>(`/components/${id}/configs/${version}`, undefined, s),
+  deleteComponentConfig: (id: string, version: number) =>
+    apiJson(`/components/${id}/configs/${version}`, 'DELETE'),
   saveComponentConfig: (id: string, config: Record<string, unknown>) =>
     apiJson(`/components/${id}/configs`, 'POST', { config, set_current: true }),
   setCurrentConfig: (id: string, version: number) =>

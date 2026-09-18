@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Loader2, Plus } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
 import { useOS } from '@/lib/osContext'
@@ -11,10 +12,194 @@ import {
   Pager,
   Drawer,
   PrimitiveTag,
-  StatusPill
+  StatusPill,
+  ConfirmDelete
 } from '@/components/data'
 import { DbTableHeader } from '@/components/shared'
 import { cn } from '@/lib/utils'
+
+function EvalCreateForm({ onCreated }: { onCreated: () => void }) {
+  const { config } = useOS()
+  const agentList = config?.agents ?? []
+  const teamList = config?.teams ?? []
+  const [evalType, setEvalType] = useState('accuracy')
+  const [target, setTarget] = useState('')
+  const [name, setName] = useState('')
+  const [input, setInput] = useState('')
+  const [expectedOutput, setExpectedOutput] = useState('')
+  const [criteria, setCriteria] = useState('')
+  const [guidelines, setGuidelines] = useState('')
+  const [tools, setTools] = useState('')
+  const [scoring, setScoring] = useState<'numeric' | 'binary'>('numeric')
+  const [iterations, setIterations] = useState(1)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const create = async () => {
+    if (!target || !input.trim()) return
+    const [kind, id] = target.split(/:(.+)/)
+    setBusy(true)
+    setError(null)
+    try {
+      await api.createEvalRun({
+        eval_type: evalType,
+        input: input.trim(),
+        ...(kind === 'team' ? { team_id: id } : { agent_id: id }),
+        name: name.trim() || undefined,
+        num_iterations: iterations,
+        ...(evalType === 'accuracy'
+          ? {
+              expected_output: expectedOutput.trim() || undefined,
+              criteria: criteria.trim() || undefined,
+              scoring_strategy: scoring
+            }
+          : {}),
+        ...(evalType === 'reliability'
+          ? { expected_tool_calls: tools.split(',').map((t) => t.trim()).filter(Boolean) }
+          : {}),
+        ...(evalType === 'agent_as_judge'
+          ? {
+              criteria: criteria.trim() || undefined,
+              additional_guidelines: guidelines.trim() || undefined
+            }
+          : {})
+      })
+      onCreated()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const inputCls =
+    'w-full rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent'
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="label mb-1.5">Type</div>
+        <select value={evalType} onChange={(e) => setEvalType(e.target.value)} className={inputCls}>
+          <option value="accuracy">Accuracy</option>
+          <option value="reliability">Reliability (tool calls)</option>
+          <option value="agent_as_judge">Agent as judge</option>
+          <option value="performance">Performance</option>
+        </select>
+      </div>
+      <div>
+        <div className="label mb-1.5">Target</div>
+        <select value={target} onChange={(e) => setTarget(e.target.value)} className={inputCls}>
+          <option value="">Select an agent or team…</option>
+          <optgroup label="Agents">
+            {agentList.map((a) => (
+              <option key={a.id} value={`agent:${a.id}`}>
+                {a.name || a.id}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Teams">
+            {teamList.map((t) => (
+              <option key={t.id} value={`team:${t.id}`}>
+                {t.name || t.id}
+              </option>
+            ))}
+          </optgroup>
+        </select>
+      </div>
+      <div>
+        <div className="label mb-1.5">Name</div>
+        <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+      </div>
+      <div>
+        <div className="label mb-1.5">Input (prompt)</div>
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          rows={3}
+          className={inputCls + ' resize-y'}
+        />
+      </div>
+
+      {evalType === 'accuracy' && (
+        <>
+          <div>
+            <div className="label mb-1.5">Expected output</div>
+            <textarea
+              value={expectedOutput}
+              onChange={(e) => setExpectedOutput(e.target.value)}
+              rows={2}
+              className={inputCls + ' resize-y'}
+            />
+          </div>
+          <div>
+            <div className="label mb-1.5">Scoring</div>
+            <select
+              value={scoring}
+              onChange={(e) => setScoring(e.target.value as 'numeric' | 'binary')}
+              className={inputCls}
+            >
+              <option value="numeric">Numeric (1–10)</option>
+              <option value="binary">Binary (pass/fail)</option>
+            </select>
+          </div>
+        </>
+      )}
+      {evalType === 'reliability' && (
+        <div>
+          <div className="label mb-1.5">Expected tool calls (comma-separated)</div>
+          <input
+            value={tools}
+            onChange={(e) => setTools(e.target.value)}
+            placeholder="get_weather, search_web"
+            className={inputCls + ' font-mono text-[13px]'}
+          />
+        </div>
+      )}
+      {evalType === 'agent_as_judge' && (
+        <>
+          <div>
+            <div className="label mb-1.5">Criteria</div>
+            <textarea
+              value={criteria}
+              onChange={(e) => setCriteria(e.target.value)}
+              rows={2}
+              className={inputCls + ' resize-y'}
+            />
+          </div>
+          <div>
+            <div className="label mb-1.5">Additional guidelines</div>
+            <textarea
+              value={guidelines}
+              onChange={(e) => setGuidelines(e.target.value)}
+              rows={2}
+              className={inputCls + ' resize-y'}
+            />
+          </div>
+        </>
+      )}
+      <div>
+        <div className="label mb-1.5">Iterations</div>
+        <input
+          type="number"
+          min={1}
+          value={iterations}
+          onChange={(e) => setIterations(Number(e.target.value))}
+          className="w-24 rounded-md border border-border bg-panel px-3 py-2 text-sm text-fg outline-none focus:border-accent"
+        />
+      </div>
+
+      {error && <p className="text-[12px] text-red-300">{error}</p>}
+      <button
+        onClick={create}
+        disabled={busy || !target || !input.trim()}
+        className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-40"
+      >
+        {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+        Run evaluation
+      </button>
+    </div>
+  )
+}
 
 function Chips({
   label,
@@ -146,7 +331,8 @@ export function Evaluations() {
   const { config } = useOS()
   const [type, setType] = useState('')
   const [selected, setSelected] = useState<EvalRun | null>(null)
-  const { rows, meta, loading, error, page, setPage } = usePaginatedList<EvalRun>(
+  const [creating, setCreating] = useState(false)
+  const { rows, meta, loading, error, page, setPage, reload } = usePaginatedList<EvalRun>(
     (params, s) => api.evalRuns(params, s),
     { limit: 25, params: { eval_types: type } }
   )
@@ -156,16 +342,25 @@ export function Evaluations() {
       <PageHeader
         title="Evaluations"
         actions={
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-hover"
-          >
-            <option value="">All types</option>
-            <option value="reliability">Reliability</option>
-            <option value="agent_as_judge">Agent as judge</option>
-            <option value="accuracy">Accuracy</option>
-          </select>
+          <div className="flex items-center gap-2">
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="rounded-md border border-border bg-panel px-3 py-1.5 text-[12px] text-muted outline-none hover:bg-hover"
+            >
+              <option value="">All types</option>
+              <option value="reliability">Reliability</option>
+              <option value="agent_as_judge">Agent as judge</option>
+              <option value="accuracy">Accuracy</option>
+            </select>
+            <button
+              onClick={() => setCreating(true)}
+              className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-black hover:opacity-90"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              New evaluation
+            </button>
+          </div>
         }
       >
         <DbTableHeader
@@ -228,6 +423,19 @@ export function Evaluations() {
                   {formatDateTime(r.created_at)}
                 </span>
               )
+            },
+            {
+              key: 'actions',
+              header: '',
+              align: 'right',
+              render: (r) => (
+                <ConfirmDelete
+                  onConfirm={async () => {
+                    await api.deleteEvalRun(r.id)
+                    reload()
+                  }}
+                />
+              )
             }
           ]}
           rows={rows}
@@ -239,6 +447,15 @@ export function Evaluations() {
         />
         <Pager page={page} totalPages={meta?.total_pages ?? 1} onPage={setPage} />
       </div>
+
+      <Drawer open={creating} title="New evaluation" onClose={() => setCreating(false)}>
+        <EvalCreateForm
+          onCreated={() => {
+            setCreating(false)
+            reload()
+          }}
+        />
+      </Drawer>
 
       <Drawer
         open={!!selected}
