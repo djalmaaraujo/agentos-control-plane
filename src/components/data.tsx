@@ -91,6 +91,12 @@ export interface Column<T> {
   render?: (row: T) => ReactNode
 }
 
+export interface TableSelection {
+  selected: Set<string>
+  onToggle: (key: string) => void
+  onToggleAll: (keys: string[]) => void
+}
+
 export function DataTable<T>({
   columns,
   rows,
@@ -98,7 +104,8 @@ export function DataTable<T>({
   error,
   empty,
   getKey,
-  onRowClick
+  onRowClick,
+  selection
 }: {
   columns: Column<T>[]
   rows: T[]
@@ -107,15 +114,28 @@ export function DataTable<T>({
   empty?: string
   getKey: (row: T) => string
   onRowClick?: (row: T) => void
+  selection?: TableSelection
 }) {
   const align = (a?: string) =>
     a === 'right' ? 'text-right' : a === 'center' ? 'text-center' : 'text-left'
+  const colCount = columns.length + (selection ? 1 : 0)
+  const allKeys = rows.map(getKey)
+  const allSelected = allKeys.length > 0 && allKeys.every((k) => selection?.selected.has(k))
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-border">
+            {selection && (
+              <th className="w-8 px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={() => selection.onToggleAll(allKeys)}
+                />
+              </th>
+            )}
             {columns.map((c) => (
               <th
                 key={c.key}
@@ -133,7 +153,7 @@ export function DataTable<T>({
         <tbody>
           {loading && rows.length === 0 && (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-16 text-center">
+              <td colSpan={colCount} className="px-4 py-16 text-center">
                 <Spinner className="mx-auto h-5 w-5 text-faint" />
               </td>
             </tr>
@@ -141,7 +161,7 @@ export function DataTable<T>({
           {error && (
             <tr>
               <td
-                colSpan={columns.length}
+                colSpan={colCount}
                 className="px-4 py-16 text-center text-sm text-red-300"
               >
                 {error}
@@ -151,35 +171,47 @@ export function DataTable<T>({
           {!loading && !error && rows.length === 0 && (
             <tr>
               <td
-                colSpan={columns.length}
+                colSpan={colCount}
                 className="px-4 py-16 text-center text-sm text-faint"
               >
                 {empty ?? 'Nothing here yet.'}
               </td>
             </tr>
           )}
-          {rows.map((row) => (
-            <tr
-              key={getKey(row)}
-              onClick={onRowClick ? () => onRowClick(row) : undefined}
-              className={cn(
-                'border-b border-border-soft transition-colors',
-                onRowClick && 'cursor-pointer hover:bg-hover'
-              )}
-            >
-              {columns.map((c) => (
-                <td
-                  key={c.key}
-                  className={cn(
-                    'px-4 py-3 text-[13px] text-muted',
-                    align(c.align)
-                  )}
-                >
-                  {c.render ? c.render(row) : ((row as Record<string, unknown>)[c.key] as ReactNode)}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {rows.map((row) => {
+            const key = getKey(row)
+            return (
+              <tr
+                key={key}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                className={cn(
+                  'border-b border-border-soft transition-colors',
+                  onRowClick && 'cursor-pointer hover:bg-hover'
+                )}
+              >
+                {selection && (
+                  <td className="w-8 px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selection.selected.has(key)}
+                      onChange={() => selection.onToggle(key)}
+                    />
+                  </td>
+                )}
+                {columns.map((c) => (
+                  <td
+                    key={c.key}
+                    className={cn(
+                      'px-4 py-3 text-[13px] text-muted',
+                      align(c.align)
+                    )}
+                  >
+                    {c.render ? c.render(row) : ((row as Record<string, unknown>)[c.key] as ReactNode)}
+                  </td>
+                ))}
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>

@@ -51,6 +51,11 @@ export const api = {
       { session_name: name }
     ),
   deleteSession: (id: string) => apiJson(`/sessions/${id}`, 'DELETE'),
+  deleteSessions: (sessionIds: string[], sessionTypes: string[]) =>
+    apiJson('/sessions', 'DELETE', {
+      session_ids: sessionIds,
+      session_types: sessionTypes
+    }),
   forkSession: (type: 'agent' | 'team', componentId: string, sessionId: string) =>
     apiJson<{ session_id?: string }>(
       `/${type === 'team' ? 'teams' : 'agents'}/${componentId}/sessions/${sessionId}/fork`,
@@ -83,6 +88,8 @@ export const api = {
     apiGet<Paginated<Memory>>('/memories', q, s),
   memoryTopics: (s?: AbortSignal) => apiGet<string[]>('/memory_topics', undefined, s),
   deleteMemory: (id: string) => apiJson(`/memories/${id}`, 'DELETE'),
+  deleteMemories: (ids: string[]) =>
+    apiJson('/memories', 'DELETE', { memory_ids: ids }),
   optimizeMemories: () => apiJson('/optimize-memories', 'POST'),
   createMemory: (body: { memory: string; user_id?: string; topics?: string[] }) =>
     apiJson('/memories', 'POST', body),
@@ -93,6 +100,12 @@ export const api = {
 
   metrics: (q: Q, s?: AbortSignal) => apiGet<MetricsResponse>('/metrics', q, s),
   refreshMetrics: () => apiJson('/metrics/refresh', 'POST'),
+  metricsRefreshStatus: (s?: AbortSignal) =>
+    apiGet<{ status: string; started_at?: number; finished_at?: number; error?: string }>(
+      '/metrics/refresh/status',
+      undefined,
+      s
+    ),
 
   evalRuns: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<EvalRun>>('/eval-runs', q, s),

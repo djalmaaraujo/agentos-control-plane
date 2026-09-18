@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bot, User as UserIcon, Users } from 'lucide-react'
+import { Bot, Loader2, Trash2, User as UserIcon, Users } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
 import { useOS } from '@/lib/osContext'
@@ -204,14 +204,48 @@ function Field({
   )
 }
 
+function sessionType(r: Session): string {
+  if (r.team_id) return 'team'
+  if (r.workflow_id) return 'workflow'
+  return 'agent'
+}
+
 export function Sessions() {
   const { config } = useOS()
   const [type, setType] = useState('')
   const [selected, setSelected] = useState<Session | null>(null)
-  const { rows, meta, loading, error, page, setPage } = usePaginatedList<Session>(
+  const [sel, setSel] = useState<Set<string>>(new Set())
+  const [deleting, setDeleting] = useState(false)
+  const { rows, meta, loading, error, page, setPage, reload } = usePaginatedList<Session>(
     (params, s) => api.sessions(params, s),
     { limit: 25, params: { type, sort_by: 'updated_at', sort_order: 'desc' } }
   )
+
+  const toggle = (k: string) =>
+    setSel((p) => {
+      const n = new Set(p)
+      if (n.has(k)) n.delete(k)
+      else n.add(k)
+      return n
+    })
+  const toggleAll = (keys: string[]) =>
+    setSel((p) => (keys.every((k) => p.has(k)) ? new Set() : new Set(keys)))
+
+  const deleteSelected = async () => {
+    const chosen = rows.filter((r) => sel.has(r.session_id))
+    if (chosen.length === 0) return
+    setDeleting(true)
+    try {
+      await api.deleteSessions(
+        chosen.map((r) => r.session_id),
+        chosen.map(sessionType)
+      )
+      setSel(new Set())
+      reload()
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   return (
     <div>
@@ -219,6 +253,16 @@ export function Sessions() {
         title="Sessions"
         actions={
           <div className="flex items-center gap-2">
+            {sel.size > 0 && (
+              <button
+                onClick={deleteSelected}
+                disabled={deleting}
+                className="flex items-center gap-1.5 rounded-md border border-red-900/60 px-3 py-1.5 text-[12px] text-red-300 hover:bg-red-950/30 disabled:opacity-40"
+              >
+                {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                Delete {sel.size}
+              </button>
+            )}
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
@@ -298,6 +342,7 @@ export function Sessions() {
           empty="No sessions yet."
           getKey={(r) => r.session_id}
           onRowClick={setSelected}
+          selection={{ selected: sel, onToggle: toggle, onToggleAll: toggleAll }}
         />
         <Pager page={page} totalPages={meta?.total_pages ?? 1} onPage={setPage} />
       </div>

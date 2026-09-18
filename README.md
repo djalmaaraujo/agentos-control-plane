@@ -19,7 +19,7 @@ proxy serves the app and forwards `/api` to your AgentOS runtime.
   replies, live tool calls (arguments + result), reasoning, workflow steps, and
   resume / rename / delete of past sessions.
 - **Sessions** — every session with a tabbed detail (conversation with inline
-  attachments/media, token metrics, metadata).
+  attachments/media, token metrics, metadata); select rows to bulk-delete.
 - **Traces** — spans as a tree or a time-axis timeline (agent / team / model /
   tool), with per-span input, output and metadata, plus a server-side filter
   builder (status, ids, …).
@@ -31,11 +31,12 @@ proxy serves the app and forwards `/api` to your AgentOS runtime.
   code-defined components show read-only alongside the Studio-authored ones.
 - **Learning** — user memories, profiles, entity memories, session context and
   decision logs; edit or delete entries.
-- **Memory** — stored memories with search; create, edit, delete and optimize.
+- **Memory** — stored memories with search; create, edit, optimize, and single
+  or bulk delete.
 - **Knowledge** — documents per knowledge base; add content (text / URL / file),
   semantic search, refresh and delete.
 - **Metrics** — per-metric charts (tokens, users, runs, sessions, model mix), a
-  month picker and a recalculate action.
+  month picker and a recalculate action with live refresh status.
 - **Evaluations** — launch accuracy / reliability / judge / performance runs and
   review the tool-call / judge breakdown; delete runs.
 - **Approvals** — tool calls waiting for a human; approve or reject.

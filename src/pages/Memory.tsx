@@ -147,10 +147,23 @@ export function Memory() {
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState(false)
   const [optimizing, setOptimizing] = useState(false)
+  const [sel, setSel] = useState<Set<string>>(new Set())
+  const [deleting, setDeleting] = useState(false)
   const { rows, meta, loading, error, page, setPage, reload } = usePaginatedList<MemoryRow>(
     (params, s) => api.memories(params, s),
     { limit: 25, params: { search_content: search } }
   )
+
+  const key = (r: MemoryRow) => r.memory_id ?? JSON.stringify(r)
+  const toggle = (k: string) =>
+    setSel((p) => {
+      const n = new Set(p)
+      if (n.has(k)) n.delete(k)
+      else n.add(k)
+      return n
+    })
+  const toggleAll = (keys: string[]) =>
+    setSel((p) => (keys.every((k) => p.has(k)) ? new Set() : new Set(keys)))
 
   const optimize = async () => {
     setOptimizing(true)
@@ -162,12 +175,35 @@ export function Memory() {
     }
   }
 
+  const deleteSelected = async () => {
+    const ids = rows.filter((r) => r.memory_id && sel.has(key(r))).map((r) => r.memory_id!)
+    if (ids.length === 0) return
+    setDeleting(true)
+    try {
+      await api.deleteMemories(ids)
+      setSel(new Set())
+      reload()
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div>
       <PageHeader
         title="Memory"
         actions={
           <div className="flex items-center gap-2">
+            {sel.size > 0 && (
+              <button
+                onClick={deleteSelected}
+                disabled={deleting}
+                className="flex items-center gap-1.5 rounded-md border border-red-900/60 px-3 py-1.5 text-[12px] text-red-300 hover:bg-red-950/30 disabled:opacity-40"
+              >
+                {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                Delete {sel.size}
+              </button>
+            )}
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -245,6 +281,7 @@ export function Memory() {
           empty="No memories stored yet."
           getKey={(r) => r.memory_id ?? JSON.stringify(r)}
           onRowClick={setSelected}
+          selection={{ selected: sel, onToggle: toggle, onToggleAll: toggleAll }}
         />
         <Pager page={page} totalPages={meta?.total_pages ?? 1} onPage={setPage} />
       </div>

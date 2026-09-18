@@ -65,6 +65,7 @@ export function Metrics() {
   const { start, end, days } = useMemo(() => monthRange(year, month), [year, month])
 
   const [recalculating, setRecalculating] = useState(false)
+  const [refreshStatus, setRefreshStatus] = useState<string | null>(null)
   const { data, loading, error, reload } = useApi<MetricsResponse>(
     (s) => api.metrics({ starting_date: start, ending_date: end }, s),
     [serverKey, refreshNonce, start, end]
@@ -72,11 +73,20 @@ export function Metrics() {
 
   const recalculate = async () => {
     setRecalculating(true)
+    setRefreshStatus(null)
     try {
       await api.refreshMetrics()
+      const busy = ['running', 'in_progress', 'pending', 'processing']
+      for (let i = 0; i < 30; i++) {
+        const st = await api.metricsRefreshStatus()
+        setRefreshStatus(st.status)
+        if (!busy.includes(st.status)) break
+        await new Promise((r) => setTimeout(r, 1000))
+      }
       reload()
     } finally {
       setRecalculating(false)
+      setTimeout(() => setRefreshStatus(null), 3000)
     }
   }
 
@@ -131,6 +141,20 @@ export function Metrics() {
               <RotateCw className={cn('h-3.5 w-3.5', recalculating && 'animate-spin')} />
               Recalculate
             </button>
+            {refreshStatus && (
+              <span
+                className={cn(
+                  'font-mono text-[11px] uppercase tracking-wider',
+                  refreshStatus === 'completed'
+                    ? 'text-emerald-400'
+                    : refreshStatus === 'failed' || refreshStatus === 'error'
+                      ? 'text-red-300'
+                      : 'text-faint'
+                )}
+              >
+                {refreshStatus}
+              </span>
+            )}
             <div className="flex items-center rounded-md border border-border">
               <button onClick={() => shiftMonth(-1)} className="p-1.5 text-muted hover:bg-hover">
                 <ChevronLeft className="h-4 w-4" />
