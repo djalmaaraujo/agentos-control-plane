@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus, SlidersHorizontal, X } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
@@ -16,7 +17,6 @@ import {
 import { DbTableHeader, ExportMenu, TimeRange } from '@/components/shared'
 import { rangeParams, type TimeRangeKey } from '@/lib/timeRange'
 import { exportCsv, exportJson } from '@/lib/export'
-import { TraceDetail } from './TraceDetail'
 import { cn } from '@/lib/utils'
 
 interface Condition {
@@ -150,7 +150,7 @@ export function Traces() {
   const [query, setQuery] = useState('')
   const [range, setRange] = useState<TimeRangeKey>('all')
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [openId, setOpenId] = useState<string | null>(null)
+  const navigate = useNavigate()
   const [advanced, setAdvanced] = useState(false)
   const [filter, setFilter] = useState<unknown | null>(null)
 
@@ -179,10 +179,6 @@ export function Traces() {
     (params, s) => api.traceSessionStats(params, s),
     { limit: 25, enabled: tab === 'sessions' }
   )
-
-  if (openId) {
-    return <TraceDetail traceId={openId} onBack={() => setOpenId(null)} />
-  }
 
   const q = query.toLowerCase().trim()
   const runRows = q
@@ -328,7 +324,7 @@ export function Traces() {
               error={runs.error}
               empty="No traces yet."
               getKey={(r) => r.trace_id}
-              onRowClick={(r) => setOpenId(r.trace_id)}
+              onRowClick={(r) => navigate(`/traces/${r.trace_id}`)}
             />
             <Pager page={runs.page} totalPages={runs.meta?.total_pages ?? 1} onPage={runs.setPage} />
           </>

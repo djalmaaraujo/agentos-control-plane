@@ -19,16 +19,18 @@ proxy serves the app and forwards `/api` to your AgentOS runtime.
   replies, live tool calls (arguments + result), reasoning, workflow steps, and
   resume / rename / delete of past sessions.
 - **Sessions** — every session with a tabbed detail (conversation with inline
-  attachments/media, token metrics, metadata); select rows to bulk-delete.
+  attachments/media, token metrics, metadata) at its own shareable URL; select
+  rows to bulk-delete.
 - **Traces** — spans as a tree or a time-axis timeline (agent / team / model /
-  tool), with per-span input, output and metadata, plus a server-side filter
-  builder (status, ids, …).
+  tool), with per-span input, output and metadata, a server-side filter builder
+  (status, ids, …), and a shareable URL per trace.
 - **Studio** — build, version and publish agents, teams and workflows at runtime
   with a guided form (model, instructions, tools, members, mode, history) or raw
   config JSON; teams and workflows get a visual canvas (React Flow) — members and
   steps as a graph you can edit — config versions you can set current, and an
-  **API access** panel (REST + MCP snippets) on published components. Your
-  code-defined components show read-only alongside the Studio-authored ones.
+  **API access** panel (REST + MCP snippets) on published components. Each
+  component opens at its own shareable URL. Your code-defined components show
+  read-only alongside the Studio-authored ones.
 - **Learning** — user memories, profiles, entity memories, session context and
   decision logs; edit or delete entries.
 - **Memory** — stored memories with search; create, edit, optimize, and single

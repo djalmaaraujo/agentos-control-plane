@@ -42,6 +42,8 @@ export const api = {
 
   sessions: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<Session>>('/sessions', q, s),
+  session: (id: string, s?: AbortSignal) =>
+    apiGet<Session>(`/sessions/${id}`, undefined, s),
   sessionRuns: (id: string, s?: AbortSignal) =>
     apiGet<unknown>(`/sessions/${id}/runs`, undefined, s),
   renameSession: (id: string, name: string, type?: string) =>

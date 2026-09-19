@@ -9,6 +9,7 @@ import {
   Users,
   Wrench
 } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
 import { formatDateTime, formatDuration } from '@/lib/format'
@@ -417,4 +418,11 @@ export function TraceDetail({
       )}
     </div>
   )
+}
+
+// Route wrapper: /traces/:traceId — a shareable URL for a single trace.
+export function TraceDetailRoute() {
+  const { traceId = '' } = useParams()
+  const navigate = useNavigate()
+  return <TraceDetail traceId={traceId} onBack={() => navigate('/traces')} />
 }

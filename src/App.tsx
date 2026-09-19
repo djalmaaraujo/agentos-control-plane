@@ -5,6 +5,7 @@ import { Home } from '@/pages/Home'
 import { Chat } from '@/pages/Chat'
 import { Sessions } from '@/pages/Sessions'
 import { Traces } from '@/pages/Traces'
+import { TraceDetailRoute } from '@/pages/TraceDetail'
 import { StudioList } from '@/pages/StudioList'
 import { StudioEditorRoute } from '@/pages/StudioEditor'
 import { Learning } from '@/pages/Learning'
@@ -27,7 +28,9 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="chat" element={<Chat />} />
         <Route path="sessions" element={<Sessions />} />
+        <Route path="sessions/:sessionId" element={<Sessions />} />
         <Route path="traces" element={<Traces />} />
+        <Route path="traces/:traceId" element={<TraceDetailRoute />} />
         <Route path="studio" element={<Navigate to="/studio/agents" replace />} />
         <Route path="studio/registry" element={<Registry />} />
         <Route path="studio/:type" element={<StudioList />} />

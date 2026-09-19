@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Bot, Loader2, Trash2, User as UserIcon, Users } from 'lucide-react'
 import { api } from '@/lib/api'
 import { usePaginatedList } from '@/lib/usePaginatedList'
@@ -212,14 +213,25 @@ function sessionType(r: Session): string {
 
 export function Sessions() {
   const { config } = useOS()
+  const { sessionId } = useParams()
+  const navigate = useNavigate()
   const [type, setType] = useState('')
-  const [selected, setSelected] = useState<Session | null>(null)
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [deleting, setDeleting] = useState(false)
   const { rows, meta, loading, error, page, setPage, reload } = usePaginatedList<Session>(
     (params, s) => api.sessions(params, s),
     { limit: 25, params: { type, sort_by: 'updated_at', sort_order: 'desc' } }
   )
+
+  // The detail drawer is driven by the URL (/sessions/:sessionId), so it is
+  // shareable; fetch the session if it is not on the current page.
+  const fetched = useApi<Session | null>(
+    (s) => (sessionId ? api.session(sessionId, s) : Promise.resolve(null)),
+    [sessionId]
+  )
+  const selected = sessionId
+    ? (rows.find((r) => r.session_id === sessionId) ?? fetched.data ?? null)
+    : null
 
   const toggle = (k: string) =>
     setSel((p) => {
@@ -341,7 +353,7 @@ export function Sessions() {
           error={error}
           empty="No sessions yet."
           getKey={(r) => r.session_id}
-          onRowClick={setSelected}
+          onRowClick={(r) => navigate(`/sessions/${r.session_id}`)}
           selection={{ selected: sel, onToggle: toggle, onToggleAll: toggleAll }}
         />
         <Pager page={page} totalPages={meta?.total_pages ?? 1} onPage={setPage} />
@@ -354,7 +366,7 @@ export function Sessions() {
             {selected?.session_name || selected?.session_id}
           </span>
         }
-        onClose={() => setSelected(null)}
+        onClose={() => navigate('/sessions')}
       >
         {selected && <SessionDetail session={selected} />}
       </Drawer>
