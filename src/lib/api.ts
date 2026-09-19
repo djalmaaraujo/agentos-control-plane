@@ -207,6 +207,8 @@ export const api = {
 
   components: (q: Q, s?: AbortSignal) =>
     apiGet<Paginated<Component>>('/components', q, s),
+  componentById: (id: string, s?: AbortSignal) =>
+    apiGet<Component>(`/components/${id}`, undefined, s),
   createComponent: (body: {
     name: string
     component_type: ComponentType

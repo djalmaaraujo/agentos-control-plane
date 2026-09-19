@@ -12,7 +12,6 @@ import { PageEmpty, CardGrid } from '@/components/shared'
 import { Card, PillButton, Spinner } from '@/components/ui'
 import { ComponentForm, type FormOptions } from '@/components/ComponentForm'
 import { Drawer } from '@/components/data'
-import { StudioEditor } from './StudioEditor'
 import { cn, modelLabel } from '@/lib/utils'
 
 const SLUG: Record<string, { type: ComponentType; label: string }> = {
@@ -217,12 +216,10 @@ export function StudioList() {
   const options = useFormOptions()
   const { config } = useOS()
   const [creating, setCreating] = useState(false)
-  const [editing, setEditing] = useState<Component | null>(null)
 
   // The route studio/:type keeps this component mounted across type changes, so
-  // reset the open editor / create drawer when the tab switches.
+  // close the create drawer when the tab switches.
   useEffect(() => {
-    setEditing(null)
     setCreating(false)
   }, [slug])
 
@@ -250,17 +247,6 @@ export function StudioList() {
       : meta.type === 'team'
         ? config?.teams
         : config?.workflows) ?? []
-
-  if (editing) {
-    return (
-      <StudioEditor
-        component={editing}
-        options={options}
-        onBack={() => setEditing(null)}
-        onChanged={reload}
-      />
-    )
-  }
 
   const EmptyIcon = ICON[meta.type]
 
@@ -344,7 +330,7 @@ export function StudioList() {
                       key={c.component_id}
                       component={c}
                       onChat={() => navigate(`/chat?type=${c.component_type}&id=${c.component_id}`)}
-                      onEdit={() => setEditing(c)}
+                      onEdit={() => navigate(`/studio/${slug}/${c.component_id}`)}
                       onDeleted={() => {
                         reload()
                         archived.reload()

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Check, Loader2, Pencil, X } from 'lucide-react'
 import { api } from '@/lib/api'
@@ -69,6 +69,13 @@ export function Learning() {
     )
 
   const mem = selected ? firstMemory(selected) : undefined
+
+  // learning/:module keeps this component mounted, so close any open drawer/edit
+  // when the module tab changes.
+  useEffect(() => {
+    setSelected(null)
+    setEditing(false)
+  }, [module])
 
   const startEdit = () => {
     setEditText(mem?.content ?? '')

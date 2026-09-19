@@ -1,7 +1,9 @@
 import { lazy, Suspense, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft, Loader2, Check, Eye } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/useApi'
+import { useFormOptions } from '@/lib/useFormOptions'
 import { formatDateTime } from '@/lib/format'
 import type { Component, ComponentConfig, ComponentType } from '@/lib/types'
 import { ComponentForm, type FormOptions } from '@/components/ComponentForm'
@@ -275,5 +277,37 @@ export function StudioEditor({
         {viewing && <JsonBlock value={viewing.config ?? {}} />}
       </Drawer>
     </div>
+  )
+}
+
+// Route wrapper: /studio/:type/:id — loads the component by id so the editor has
+// its own shareable URL and unmounts cleanly when the tab changes.
+export function StudioEditorRoute() {
+  const { type = 'agents', id = '' } = useParams()
+  const navigate = useNavigate()
+  const options = useFormOptions()
+  const back = () => navigate(`/studio/${type}`)
+  const { data, loading } = useApi<Component>((s) => api.componentById(id, s), [id])
+
+  if (loading)
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Spinner className="h-5 w-5 text-faint" />
+      </div>
+    )
+  if (!data)
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3">
+        <p className="text-sm text-faint">Component not found.</p>
+        <button
+          onClick={back}
+          className="rounded-md border border-border px-3 py-1.5 text-[12px] text-muted hover:bg-hover hover:text-fg"
+        >
+          Back
+        </button>
+      </div>
+    )
+  return (
+    <StudioEditor component={data} options={options} onBack={back} onChanged={() => {}} />
   )
 }
