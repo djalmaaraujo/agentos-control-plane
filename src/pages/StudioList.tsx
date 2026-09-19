@@ -219,6 +219,13 @@ export function StudioList() {
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<Component | null>(null)
 
+  // The route studio/:type keeps this component mounted across type changes, so
+  // reset the open editor / create drawer when the tab switches.
+  useEffect(() => {
+    setEditing(null)
+    setCreating(false)
+  }, [slug])
+
   const { rows, loading, error, reload } = usePaginatedList<Component>(
     (params, s) => api.components(params, s),
     { limit: 100 }
